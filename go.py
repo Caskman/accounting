@@ -1,3 +1,5 @@
+# source, type, name
+
 from openpyxl import Workbook
 import re
 import csv
@@ -119,30 +121,32 @@ def main():
     summaryws.append([])
     summaryws.append(["Date", "Income", "Expense", "Net"])
     months_list = [(k, months_dict[k]) for k in months_dict]
-    months_list = sorted(months_list, key=itemgetter(0), reverse=True)
-    for month_t in months_list:
+    for month_t in sorted(months_list, key=itemgetter(0), reverse=True):
         date = month_t[0]
         month = month_t[1]
         income = sum(map(lambda x: x.amt, month.income))
         expense = sum(map(lambda x: x.amt, month.expense))
         row = summaryws.max_row + 1
         summaryws.append([date, income, expense, f"=B{row}+C{row}"])
+
+        ws = wb.create_sheet()
+        ws.title = datetime.strftime(date, "%Y-%m")
+        ws.append(["Income"])
+        ws.append(["Date", "Description", "Amount"])
+        for item in sorted(month.income, key=attrgetter("amt"), reverse=True):
+            ws.append([item.date, item.desc, item.amt])
+        ws.append(["", "", f"=SUM(C2:C{ws.max_row})"])
+        income_sum_addr = f"C{ws.max_row}"
+
+        ws.append([])
+        ws.append(["Expenses"])
+        ws.append(["Date", "Description", "Amount", "Income %"])
+        for item in sorted(month.expense, key=attrgetter("amt")):
+            ws.append([item.date, item.desc, item.amt, f"=-100*C{ws.max_row + 1}/{income_sum_addr}"])
     
     wb.save("output.xlsx")
 
 
-
-class Transaction():
-    def __init__(self, date, desc, amt, label, ref_num):
-        self.date = date
-        self.desc = desc
-        self.amt = amt
-        self.label = label
-        self.ref_num = ref_num
-    def __repl__(self):
-        return f"{{ {self.date}, {self.desc}, {self.amt}, {self.label}, {self.ref_num},  }}"
-    def __str__(self):
-        return self.__repl__()
 
 class Month():
     def __init__(self, date, income, expense):
