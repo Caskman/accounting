@@ -2,3 +2,5 @@
 .vscode
 ENV
 *.xlsx
+__pycache__
+test.txt

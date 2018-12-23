@@ -1,55 +1,8 @@
-# source, type, name
-
 from openpyxl import Workbook
-import re
-import csv
 from datetime import datetime
 from operator import attrgetter, itemgetter
 
-def read_debit(data, label):
-    with open(f"csv/{label}.csv", "r", newline='') as fin:
-        reader = csv.reader(fin)
-        for i, row in enumerate(reader):
-            if i < 8:
-                continue
-
-            date = row[0]
-            description = row[1]
-            amount = row[2]
-            data.append(Transaction(
-                date,
-                description,
-                amount,
-                label,
-                None,
-            ))
-
-def read_credit(data, label):
-    with open(f"csv/{label}.csv", "r", newline='') as fin:
-        reader = csv.reader(fin)
-        for i, row in enumerate(reader):
-            if i < 1:
-                continue
-            date = row[0]
-            reference_number = row[1]
-            description = row[2]
-            amount = row[4]
-            data.append(Transaction(
-                date,
-                description,
-                amount,
-                label,
-                reference_number,
-            ))
-
-def clean_data(data):
-    for d in data:
-        amt = re.sub(r"\"", "", d.amt)
-        d.amt = float(amt)
-
-        d.date = datetime.strptime(d.date, "%m/%d/%Y").date()
-    return data
-
+from datainput import get_data
 
 def filter_data(data_old):
     data = []
@@ -64,20 +17,13 @@ def filter_data(data_old):
     return data
 
 def main():
-    data = []
-
-    read_debit(data, "primary")
-    read_debit(data, "secondary")
-    read_credit(data, "November2018_2236")
-    read_credit(data, "October2018_2236")
-    read_credit(data, "currentTransaction_2236")
+    data = get_data()
 
     wb = Workbook()
     summaryws = wb.active
     incomews = wb.create_sheet()
     expensews = wb.create_sheet()
 
-    data = clean_data(data)
     data = filter_data(data)
 
     income_data = [d for d in data if d.amt > 0]
@@ -154,6 +100,6 @@ class Month():
         self.income = income
         self.expense = expense
 
-
-main()
+if __name__ == "__main__":
+    main()
 
