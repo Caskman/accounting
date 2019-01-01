@@ -3,3 +3,4 @@
 ENV
 *.xlsx
 __pycache__
+filter_list.txt

@@ -3,18 +3,7 @@ from datetime import datetime
 from operator import attrgetter, itemgetter
 
 from datainput import get_data
-
-def filter_data(data_old):
-    data = []
-    for d in data_old:
-        if "Online Banking transfer" in d.desc:
-            continue
-        if "Online Banking payment" in d.desc:
-            continue
-        if "Online payment" in d.desc:
-            continue
-        data.append(d)
-    return data
+from datafilter import filter_data
 
 def main():
     data = get_data()
@@ -24,7 +13,9 @@ def main():
     incomews = wb.create_sheet()
     expensews = wb.create_sheet()
 
-    data = filter_data(data)
+    filtered_data = filter_data(data)
+    leftover_data = set(data) - set(filtered_data)
+    data = filtered_data
 
     income_data = [d for d in data if d.amt > 0]
     expense_data = [d for d in data if d.amt < 0]
@@ -90,6 +81,14 @@ def main():
         for item in sorted(month.expense, key=attrgetter("amt")):
             ws.append([item.date, item.desc, item.amt, f"=-100*C{ws.max_row + 1}/{income_sum_addr}"])
     
+    leftoverws = wb.create_sheet()
+    leftoverws.title = "Leftover Data"
+
+    leftoverws.append(["Date", "Description", "Amount"])
+    for item in sorted(leftover_data, key=attrgetter("date"), reverse=True):
+        leftoverws.append([item.date, item.desc, item.amt])
+
+
     wb.save("output.xlsx")
 
 
