@@ -18,10 +18,10 @@ Format of filename is <type>_<name>.csv
 def parse_file(filepath):
     filename = filepath.split("/")[-1].replace(".csv", "")
     filenamesplits = filename.split("_")
-    if len(filenamesplits) > 2:
+    if len(filenamesplits) > 3:
         raise Exception(f"{filepath} has an invalid filename")
     
-    formattype, label = filenamesplits
+    label, formattype, date = filenamesplits
     filelines = []
     with open(filepath, "r") as fin:
         filelines = fin.readlines()
