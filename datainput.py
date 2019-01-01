@@ -12,7 +12,7 @@ BOA_CREDIT = "boacredit"
 BOA_DEBIT = "boadebit"
 
 """
-Format of filename is <type>_<name>.csv
+Format of filename is <label>_<type>_<date>.csv
 """
 
 def parse_file(filepath):
