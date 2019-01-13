@@ -38,6 +38,7 @@ def main():
     summaryws.append(["Income", f"={income_sum_addr}"])
     summaryws.append(["Expense", f"={expense_sum_addr}"])
     summaryws.append(["Net", f"=B1+B2"])
+    summaryws.append(["Savings Rate", f"=100*B3/B1"])
 
     months_dict = {}
     def months_key(date_obj):
@@ -72,7 +73,7 @@ def main():
         ws.append(["Date", "Description", "Amount"])
         for item in sorted(month.income, key=attrgetter("amt"), reverse=True):
             ws.append([item.date, item.desc, item.amt])
-        ws.append(["", "", f"=SUM(C2:C{ws.max_row})"])
+        ws.append(["", "", f"=SUM(C3:C{ws.max_row})"])
         income_sum_addr = f"C{ws.max_row}"
 
         ws.append([])
