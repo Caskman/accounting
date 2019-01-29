@@ -4,13 +4,13 @@ from operator import attrgetter, itemgetter
 
 from datafilter import filter_data
 
-def build_spreadsheet(data, outputpath):
+def build_spreadsheet(c, data, outputpath):
     wb = Workbook()
     summaryws = wb.active
     incomews = wb.create_sheet()
     expensews = wb.create_sheet()
 
-    filtered_data = filter_data(data)
+    filtered_data = filter_data(c, data)
     leftover_data = set(data) - set(filtered_data)
     data = filtered_data
 
