@@ -8,7 +8,7 @@ import datainput
 
 TEMP_DIR = "temp"
 
-def main():
+def compile_statements():
     run_id = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
     temp_dir = f"{TEMP_DIR}-{run_id}"
 
@@ -27,4 +27,4 @@ def main():
     resultfilepath = spreadsheet.build_spreadsheet(c, data, outputpath)
 
 if __name__ == "__main__":
-    main()
+    compile()
