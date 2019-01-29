@@ -4,8 +4,6 @@ from os.path import join, abspath
 import csv
 import re
 
-CSV_DIR = "csv/"
-
 # DATA FORMATS
 
 BOA_CREDIT = "boacredit"
@@ -90,8 +88,8 @@ def parse_boadebit(lines, label):
 # END PARSE FUNCTIONS
 
 
-def get_data():
-    files = [abspath(join(CSV_DIR, f)) for f in listdir(CSV_DIR) if f[-4:] == ".csv"]
+def get_data(data_dir):
+    files = [abspath(join(data_dir, f)) for f in listdir(data_dir) if f[-4:] == ".csv"]
 
     data = []
     for f in files:
