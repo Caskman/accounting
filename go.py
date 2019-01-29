@@ -1,7 +1,7 @@
 import uuid
 import os
 
-from s3test import download_data
+from s3datasource import download_data, upload_output
 from envvars import get_var
 from spreadsheet import build_spreadsheet
 from datainput import get_data

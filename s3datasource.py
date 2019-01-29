@@ -7,10 +7,13 @@ AWS_SECRET_ACCESS_KEY = get_var("AWS_SECRET_ACCESS_KEY")
 BUCKET_ID = get_var("BUCKET_ID")
 STATEMENT_PATH = get_var("STATEMENT_PATH")
 
-def download_data(target_dir):
+def gets3resource():
     session = boto3.session.Session(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-
     s3 = session.resource("s3")
+    return s3
+
+def download_data(target_dir):
+    s3 = gets3resource()
     mybucket = s3.Bucket(BUCKET_ID)
 
     for obj in mybucket.objects.filter(Prefix=f"{STATEMENT_PATH}/"):
@@ -21,7 +24,3 @@ def download_data(target_dir):
             destfilepath = os.path.join(target_dir, objectname)
             mybucket.download_file(obj.key, destfilepath)
 
-if __name__ == "__main__":
-    if not os.path.exists(test_dir):
-        os.makedirs(test_dir)
-    download_data(test_dir)
