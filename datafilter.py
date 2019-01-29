@@ -1,6 +1,7 @@
 from datainput import get_data
+from envvars import get_var
 
-FILTER_FILE = "filter_list.txt"
+FILTER_FILE = get_var(FILTER_FILE)
 loaded = False
 filter_list = None
 
