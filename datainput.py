@@ -8,6 +8,7 @@ import re
 
 BOA_CREDIT = "boacredit"
 BOA_DEBIT = "boadebit"
+LLBEAN_MCCREDIT = "llbeanmccredit"
 
 """
 Format of filename is <label>_<type>_<date>.csv
@@ -30,12 +31,36 @@ def parse_file(filepath):
         resultdata = parse_boacredit(filelines, label)
     elif formattype == BOA_DEBIT:
         resultdata = parse_boadebit(filelines, label)
+    elif formattype == LLBEAN_MCCREDIT:
+        resultdata = parse_llbeancredit(filelines, label)
     else:
         raise Exception(f"Data type {formattype} is unknown")
 
     return resultdata
 
 # PARSE FUNCTIONS
+
+def parse_llbeancredit(lines, label):
+    parsed_lines = list(csv.reader(lines, dialect='excel-tab'))
+    return_data = []
+    for row in parsed_lines:
+        if len(row) < 4:
+            raise Exception(f"Invalid number of cols for label: {label} data type: {LLBEAN_MCCREDIT} cols: {len(row)}")
+        
+        date = datetime.strptime(row[0], "%m/%d/%Y").date()
+        amount = float(re.sub(r"\"|\$", "", row[1]))
+        description = row[2]
+
+        new_item = Transaction(
+            date,
+            description,
+            amount,
+            label,
+            None,
+        )
+        return_data.append(new_item)
+
+    return return_data
 
 def parse_boacredit(lines, label):
     parsed_lines = list(csv.reader(lines))
@@ -109,9 +134,4 @@ class Transaction():
         return f"{{ {self.date}, {self.desc}, {self.amt}, {self.label}, {self.ref_num},  }}"
     def __str__(self):
         return self.__repl__()
-
-
-
-if __name__ == "__main__":
-    get_data()
 
