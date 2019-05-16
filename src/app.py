@@ -11,7 +11,8 @@ def ping():
 @app.route('/compile', methods=["GET"])
 def index():
     path = account.compile_statements()
-    return send_file(os.path.abspath(path), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    # return send_file(os.path.abspath(path), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    return path
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80)
