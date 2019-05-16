@@ -25,6 +25,7 @@ def compile_statements():
     outputpath = os.path.join(temp_dir, f"aaa-output-{run_id}.xlsx")
 
     resultfilepath = spreadsheet.build_spreadsheet(c, data, outputpath)
+    return outputpath
 
 if __name__ == "__main__":
     compile()

@@ -15,7 +15,7 @@ def download_data(c, target_dir):
 
     STATEMENT_PATH = c.get_var("STATEMENT_PATH")
     for obj in mybucket.objects.filter(Prefix=f"{STATEMENT_PATH}/"):
-        print(obj.key)
+        # print(obj.key)
         splits = obj.key.split("/")
         objectname = splits[-1]
         if objectname != "":

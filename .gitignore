@@ -7,3 +7,4 @@ filter_list.txt
 local.env
 temp*
 *.csv
+venv

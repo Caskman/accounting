@@ -1,16 +1,17 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_file
 import account
+import os
 
 app = Flask(__name__)
 
-@app.route("/ping", methods=["POST"])
+@app.route("/ping", methods=["GET"])
 def ping():
     return jsonify(True)
 
-@app.route('/compile', methods=["POST"])
+@app.route('/compile', methods=["GET"])
 def index():
-    account.compile_statements()
-    return jsonify(True)
+    path = account.compile_statements()
+    return send_file(os.path.abspath(path), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=80)
