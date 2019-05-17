@@ -1,5 +1,7 @@
+import os
 
 LOCAL_ENV_VARS_FILENAME = "local.env"
+DOCKER_ENV_NAME = "DOCKERENV"
 
 def parse_string_to_vars(text):
     lines = text.split("\n")
@@ -14,10 +16,11 @@ def parse_string_to_vars(text):
 def init_context():
     c = Context()
     contents = []
-    with open(LOCAL_ENV_VARS_FILENAME, "r") as fin:
-        contents = fin.read()
-    varobjs = parse_string_to_vars(contents)
-    c.vars.extend(varobjs)
+    if not DOCKER_ENV_NAME in os.environ:
+        with open(LOCAL_ENV_VARS_FILENAME, "r") as fin:
+            contents = fin.read()
+        varobjs = parse_string_to_vars(contents)
+        c.vars.extend(varobjs)
     return c
 
 class Context():
@@ -26,10 +29,13 @@ class Context():
         self.vars = []
 
     def get_var(self, label):
-        found = list(filter(lambda x: x.label == label, self.vars))
-        if len(found) < 1:
-            raise Exception(f"Could not find var: {label}")
-        return found[0].value
+        if DOCKER_ENV_NAME in os.environ:
+            return os.getenv(label)
+        else:
+            found = list(filter(lambda x: x.label == label, self.vars))
+            if len(found) < 1:
+                raise Exception(f"Could not find var: {label}")
+            return found[0].value
 
     def append_raw_vars(self, raw_vars):
         self.vars.extend(parse_string_to_vars(raw_vars))

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, send_file, render_template
 import account
 import os
 
@@ -9,10 +9,13 @@ def ping():
     return jsonify(True)
 
 @app.route('/compile', methods=["GET"])
-def index():
+def compile():
     path = account.compile_statements()
-    # return send_file(os.path.abspath(path), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    return path
+    return send_file(os.path.abspath(path), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.route('/', methods=["GET"])
+def index():
+    return render_template("index.html")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80)
