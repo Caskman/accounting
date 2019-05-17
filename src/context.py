@@ -29,7 +29,7 @@ class Context():
         self.vars = []
 
     def get_var(self, label):
-        if DOCKER_ENV_NAME in os.environ:
+        if label in os.environ:
             return os.getenv(label)
         else:
             found = list(filter(lambda x: x.label == label, self.vars))

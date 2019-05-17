@@ -10,6 +10,7 @@ def ping():
 
 @app.route('/compile', methods=["GET"])
 def compile():
+    print("Compiling document")
     path = account.compile_statements()
     return send_file(os.path.abspath(path), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
