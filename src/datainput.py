@@ -25,7 +25,11 @@ def parse_file(filepath):
     with open(filepath, "r") as fin:
         filelines = fin.readlines()
         filelines = [l[:-1] if l[-1] == "\n" else l for l in filelines]
-        
+    success, transactions = parse_lines(filelines, formattype, label)
+    return transactions
+
+
+def parse_lines(lines, formattype, label):
     resultdata = None
     if formattype == BOA_CREDIT:
         resultdata = parse_boacredit(filelines, label)
@@ -38,6 +42,9 @@ def parse_file(filepath):
 
     return resultdata
 
+def parse_error(msg):
+    return (False, None, msg)
+
 # PARSE FUNCTIONS
 
 def parse_llbeancredit(lines, label):
@@ -45,7 +52,7 @@ def parse_llbeancredit(lines, label):
     return_data = []
     for row in parsed_lines:
         if len(row) < 4:
-            raise Exception(f"Invalid number of cols for label: {label} data type: {LLBEAN_MCCREDIT} cols: {len(row)}")
+            return parse_error(f"Invalid number of cols for label: {label} data type: {LLBEAN_MCCREDIT} cols: {len(row)}")
         
         date = datetime.strptime(row[0], "%m/%d/%Y").date()
         amount = float(re.sub(r"\"|\$", "", row[1]))
@@ -112,6 +119,20 @@ def parse_boadebit(lines, label):
 
 # END PARSE FUNCTIONS
 
+def normalize_to_string(transactions):
+    contents = ""
+    for trans in transactions:
+        contents += f'{trans.date.strftime("%Y-%m-%d")}'
+        contents += f"\t{trans.amt}"
+        contents += f"\t{t(trans.desc)}"
+        contents += f"\t{t(trans.label)}"
+        contents += f"\t{t(trans.ref_num)}"
+        contents += "\n"
+    return contents
+
+"""Replace tabs with four spaces"""
+def t(s):
+    s.replace("\t", "    ")
 
 def get_data(data_dir):
     files = [abspath(join(data_dir, f)) for f in listdir(data_dir) if f[-4:] == ".csv"]

@@ -8,9 +8,14 @@ import datainput
 
 TEMP_DIR = "temp"
 
-def compile_statements():
+def get_temp_dir():
     run_id = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
     temp_dir = f"{TEMP_DIR}-{run_id}"
+    return temp_dir
+
+
+def compile_statements():
+    temp_dir = get_temp_dir()
 
     if not os.path.exists(temp_dir):
         os.makedirs(temp_dir)
@@ -26,6 +31,31 @@ def compile_statements():
 
     resultfilepath = spreadsheet.build_spreadsheet(c, data, outputpath)
     return outputpath
+
+def verify_and_upload(json_dict):
+    year = json_dict["year"]
+    month = json_dict["month"]
+    accountType = json_dict["accountType"]
+    contents = json_dict["contents"]
+    label = json_dict["label"]
+
+    lines = [line.strip() for line in contents.split("\n")]
+    success, transactions, error_msg = datainput.parse_lines(lines, accountType, label)
+
+    if not success:
+        abort(400, error_msg)
+
+    normalized_contents = datainput.normalize_to_string(transactions)
+
+    filename = f"{label}_norm_{year}-{month}.csv"
+
+    temp_dir = get_temp_dir()
+    filepath = os.path.join(temp_dir, filename)
+    with open(filepath, "w") as fin:
+        fin.write(normalized_contents)
+    
+    success = s3datasource.put_statement(filepath, filename)
+    return success
 
 if __name__ == "__main__":
     compile()

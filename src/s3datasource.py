@@ -27,3 +27,13 @@ def get_object(c, key):
     obj = s3.Object(BUCKET_ID, key)
     contents = obj.get()['Body'].read().decode('utf-8')
     return contents
+
+def put_statement(datafilepath, key):
+    s3 = gets3resource(c)
+    BUCKET_ID = c.get_var("BUCKET_ID")
+    mybucket = s3.Bucket(BUCKET_ID)
+
+    STATEMENT_PATH = c.get_var("STATEMENT_PATH")
+    full_key = os.path.join(STATEMENT_PATH, key)
+    returnvals = mybucket.upload_file(datafilepath, full_key)
+    return returnvals

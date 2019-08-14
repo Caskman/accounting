@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_file, render_template
+from flask import Flask, jsonify, send_file, render_template, request
 import account
 import os
 
@@ -17,6 +17,15 @@ def compile():
 @app.route('/', methods=["GET"])
 def index():
     return render_template("index.html")
+
+@app.route('/upload', methods=["POST"])
+def upload():
+    success = account.verify_and_upload(request.get_json())
+    return jsonify({ success: success })
+    # print(request.get_json()["year"])
+    # print(type(request.data))
+    # print(request.data)
+    # return "hello"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
