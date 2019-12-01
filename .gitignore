@@ -8,3 +8,5 @@ local.env
 temp*
 *.csv
 venv
+local_data
+*sensitive*

@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, send_file, render_template
-import account
+import accounting
 import os
 
 app = Flask(__name__)
@@ -11,7 +11,7 @@ def ping():
 @app.route('/compile', methods=["GET"])
 def compile():
     print("Compiling document")
-    path = account.compile_statements()
+    path = accounting.compile_statements()
     return send_file(os.path.abspath(path), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 @app.route('/', methods=["GET"])

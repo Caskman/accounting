@@ -9,6 +9,7 @@ import re
 BOA_CREDIT = "boacredit"
 BOA_DEBIT = "boadebit"
 LLBEAN_MCCREDIT = "llbeanmccredit"
+CHASE_CREDIT = "chasecredit"
 
 """
 Format of filename is <label>_<type>_<date>.csv
@@ -33,12 +34,37 @@ def parse_file(filepath):
         resultdata = parse_boadebit(filelines, label)
     elif formattype == LLBEAN_MCCREDIT:
         resultdata = parse_llbeancredit(filelines, label)
+    elif formattype == CHASE_CREDIT:
+        resultdata = parse_chasecredit(filelines, label)
     else:
         raise Exception(f"Data type {formattype} is unknown")
 
     return resultdata
 
 # PARSE FUNCTIONS
+
+def parse_chasecredit(lines, label):
+    parsed_lines = list(csv.reader(lines))
+    parsed_lines = parsed_lines[1:]
+    return_data = []
+    for row in parsed_lines:
+        if len(row) != 6:
+            raise Exception(f"Invalid number of cols for label: {label} data type: {CHASE_CREDIT} cols: {len(row)}")
+        
+        date = datetime.strptime(row[1], "%m/%d/%Y").date()
+        amount = float(re.sub(r"\"|\$", "", row[5]))
+        description = f"{row[2]}; {row[3]}; {row[4]}"
+
+        new_item = Transaction(
+            date,
+            description,
+            amount,
+            label,
+            None,
+        )
+        return_data.append(new_item)
+
+    return return_data
 
 def parse_llbeancredit(lines, label):
     parsed_lines = list(csv.reader(lines, dialect='excel-tab'))
@@ -123,6 +149,19 @@ def get_data(data_dir):
 
     return data
 
+TEMP_DIR = "temp"
+
+def get_data_last_month(data_dir):
+    data = get_data(data_dir)
+    today = datetime.now().date()
+    data_last_month = filter(lambda t: (today - t.date).days <= 30, data)
+    return data_last_month
+
+
+def get_temp_dir_relative_path():
+    run_id = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
+    return f"{TEMP_DIR}-{run_id}"
+
 class Transaction():
     def __init__(self, date, desc, amt, label, ref_num):
         self.date = date
@@ -130,6 +169,7 @@ class Transaction():
         self.amt = amt
         self.label = label
         self.ref_num = ref_num
+        self.classification = 'none'
     def __repl__(self):
         return f"{{ {self.date}, {self.desc}, {self.amt}, {self.label}, {self.ref_num},  }}"
     def __str__(self):

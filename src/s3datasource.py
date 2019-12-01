@@ -1,6 +1,8 @@
 import boto3
 import os
 
+import context
+
 def gets3resource(c):
     AWS_ACCESS_KEY_ID = c.get_var("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = c.get_var("AWS_SECRET_ACCESS_KEY")
@@ -27,3 +29,11 @@ def get_object(c, key):
     obj = s3.Object(BUCKET_ID, key)
     contents = obj.get()['Body'].read().decode('utf-8')
     return contents
+
+def get_context():
+    c = context.init_context()
+    CONFIG_PATH = c.get_var("CONFIG_PATH")
+    config = get_object(c, CONFIG_PATH)
+    c.append_raw_vars(config)
+    return c
+

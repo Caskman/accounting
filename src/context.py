@@ -2,6 +2,7 @@ import os
 
 LOCAL_ENV_VARS_FILENAME = "local.env"
 DOCKER_ENV_NAME = "DOCKERENV"
+LOCAL_DATA_DIR = 'local_data/'
 
 def parse_string_to_vars(text):
     lines = text.split("\n")
@@ -21,7 +22,11 @@ def init_context():
             contents = fin.read()
         varobjs = parse_string_to_vars(contents)
         c.vars.extend(varobjs)
+    append_additional_vars(c)
     return c
+
+def append_additional_vars(c):
+    c.vars.append(Var("LOCAL_DATA_DIR", LOCAL_DATA_DIR))
 
 class Context():
 
