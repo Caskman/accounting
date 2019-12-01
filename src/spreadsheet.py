@@ -32,10 +32,10 @@ def build_spreadsheet(c, data, outputpath):
     expense_sum_addr = f"{expensews.title}!C{expensews.max_row}"
 
     summaryws.title = "Summary"
-    summaryws.append(["Income", f"={income_sum_addr}"])
-    summaryws.append(["Expense", f"={expense_sum_addr}"])
-    summaryws.append(["Net", f"=B1+B2"])
-    summaryws.append(["Savings Rate", f"=100*B3/B1"])
+    summaryws.append(["All Time Income", f"={income_sum_addr}"])
+    summaryws.append(["All Time Expense", f"={expense_sum_addr}"])
+    summaryws.append(["All Time Net", f"=B1+B2"])
+    summaryws.append(["All Time Savings Rate", f"=100*B3/B1"])
 
     months_dict = {}
     def months_key(date_obj):

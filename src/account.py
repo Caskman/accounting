@@ -28,4 +28,4 @@ def compile_statements():
     return outputpath
 
 if __name__ == "__main__":
-    compile()
+    compile_statements()
