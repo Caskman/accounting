@@ -7,6 +7,7 @@ def convert_transaction_to_string(transaction):
     prop_list = [
         transaction.desc,
         transaction.classification,
+        transaction.classification_debug,
         transaction.amt,
         transaction.date,
         transaction.label,

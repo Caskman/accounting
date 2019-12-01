@@ -163,15 +163,26 @@ def get_temp_dir_relative_path():
     return f"{TEMP_DIR}-{run_id}"
 
 class Transaction():
-    def __init__(self, date, desc, amt, label, ref_num):
+    def __init__(self, date, desc, amt, label, ref_num, classification='none'):
         self.date = date
         self.desc = desc
         self.amt = amt
         self.label = label
         self.ref_num = ref_num
-        self.classification = 'none'
+        self.classification = classification
+        self.classification_debug = ''
     def __repl__(self):
-        return f"{{ {self.date}, {self.desc}, {self.amt}, {self.label}, {self.ref_num},  }}"
+        field_list = [
+            self.date,
+            self.amt,
+            self.classification,
+            self.desc,
+            self.classification_debug,
+            self.label,
+            self.ref_num,
+        ]
+        field_string = ", ".join(field_list)
+        return f"{{ {field_string} }}"
     def __str__(self):
         return self.__repl__()
 

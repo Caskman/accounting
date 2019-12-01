@@ -3,19 +3,24 @@
 def classify(transactions, rules):
     for transaction in transactions:
         rule_results = [{"result": rule["run"](transaction), "rule": rule} for rule in rules]
-        for rule_result in rule_results:
-            if rule_result["result"]:
-                transaction.classification = rule_result["rule"]["name"]
-                break
+        positive_rule_results = list(filter(lambda r: r["result"], rule_results))
+        if len(positive_rule_results) > 0:
+            transaction.classification = positive_rule_results[0]["rule"]["name"]
+        if len(positive_rule_results) > 1:
+            lower_priority_rule_result_string = join_rule_result_names(positive_rule_results[1:])
+            transaction.classification_debug = \
+                f"Lower priority rule results: {lower_priority_rule_result_string}"
 
-
+def join_rule_result_names(rule_results):
+    names = map(lambda r: r["rule"]["name"], rule_results)
+    return ", ".join(names)
 
 
 ###############################################################################
 # rule functions
 
-def substring(rule_args):
-    rule_substring = rule_args['substring'].lower()
+def rule_substring(rule_arg):
+    rule_substring = rule_arg.lower()
     def rule_fn(transaction):
         return rule_substring in transaction.desc.lower() \
             or rule_substring in transaction.label.lower()
@@ -24,51 +29,44 @@ def substring(rule_args):
 # end rule functions
 ###############################################################################
 
-# Easier to declare which column names correspond with which functions
-# Makes it so we can just blindly grab functions that correspond with each column
-# and then just remove dupes, which will happen when a function
-# pulls args from multiple columns
-rule_functions = [
-    {
-        "column_names": [ # these are the column names in the csv that will
-                          # correspond with this rule function
-            "substring"
-        ],
-        "function": substring,
-    },
-]
-
-def convert_rule_functions_to_map():
-    function_map = {}
-    for rule_function in rule_functions:
-        for column_name in rule_function["column_names"]:
-            function_map[column_name] = rule_function["function"]
-    return function_map
-rule_functions_map = convert_rule_functions_to_map()
+# Declares rule functions that are available
+rule_functions_map = {
+    "substring": rule_substring
+}
 
 # Retrieves the rule function from the function map
-def get_rule_function(name, args):
-    if name in rule_functions_map:
-        return rule_functions_map[name](args)
-    else:
-        raise Exception(f"could not find function name {name} in function map")
+def get_rule_function(fields):
+    pairs = pairify_fields(fields)
+    functions = []
+    for pair in pairs:
+        if not pair[0] in rule_functions_map:
+            raise Exception(f"Could not find function {pair[0]} in function map")
+        function = rule_functions_map[pair[0]](pair[1])
+        functions.append(function)
+    def resolve(transaction):
+        for function in functions:
+            if not function(transaction):
+                return False
+        return True
+    return resolve
 
-def mapify_rule_args(args):
-    args_map = {}
-    key = None
-    for arg in args:
-        if key:
-            args_map[key] = arg
-            key = None
+def pairify_fields(fields):
+    field_list = []
+    first = None
+    for field in fields:
+        if first:
+            field_list.append([first, field])
+            first = None
         else:
-            key = arg
-    return args_map
+            first = field
+    return field_list
 
 # Converts a string into a list of rule objects
 def process_rules(rules_string):
     rules_lines = rules_string.split('\n')
     rules_lines = rules_lines[1:]
-    rules_lines = filter(lambda l: l.strip() != "", rules_lines)
+    rules_lines = map(lambda l: l.strip(), rules_lines)
+    rules_lines = filter(lambda l: l != "", rules_lines)
 
     def convert_lines_to_bare_objs(line):
         columns = line.split('\t')
@@ -88,12 +86,9 @@ def process_rules(rules_string):
     rule_objs = []
     for bare_rule_obj in bare_rule_objs:
         columns = bare_rule_obj["columns"]
-        args = {}
-        args[columns[0]] = columns[1]
         rule = {
             "name": bare_rule_obj["name"],
-            "args": mapify_rule_args(bare_rule_obj["columns"]),
-            "run": get_rule_function(columns[0], args)
+            "run": get_rule_function(columns)
         }
         rule_objs.append(rule)
     return rule_objs
