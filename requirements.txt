@@ -21,4 +21,4 @@ python-dateutil==2.8.0    # via botocore
 s3transfer==0.2.1         # via boto3
 six==1.13.0               # via pip-tools, python-dateutil
 urllib3==1.25.7           # via botocore
-werkzeug==0.14.1          # via flask
+werkzeug==0.15.3          # via flask
