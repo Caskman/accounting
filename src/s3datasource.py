@@ -4,6 +4,8 @@ import os
 import context
 
 def gets3resource(c):
+    if c.get_var('IN_AWS_LAMBDA') == 'true':
+        return boto3.resource('s3')
     AWS_ACCESS_KEY_ID = c.get_var("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = c.get_var("AWS_SECRET_ACCESS_KEY")
     session = boto3.session.Session(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)

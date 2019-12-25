@@ -5,7 +5,7 @@ ENV
 __pycache__
 filter_list.txt
 local.env
-temp*
+temp/*
 *.csv
 venv
 *sensitive*

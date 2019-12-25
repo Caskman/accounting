@@ -19,7 +19,7 @@ def parse_string_to_vars(text):
 def init_context():
     c = Context()
     contents = []
-    if not DOCKER_ENV_NAME in os.environ:
+    if os.path.isfile(LOCAL_ENV_VARS_FILENAME):
         with open(LOCAL_ENV_VARS_FILENAME, "r") as fin:
             contents = fin.read()
         varobjs = parse_string_to_vars(contents)
@@ -48,8 +48,14 @@ class Context():
             return found[0].value
 
     def get_default_var(self, label):
-        if label == 'CONFIG_PATH':
-            return 'config.txt'
+        var_map = {
+            'CONFIG_PATH': 'config.txt',
+            'IN_AWS_LAMBDA': 'false',
+        }
+        if label in var_map:
+            return var_map[label]
+        else:
+            return None
 
     def append_raw_vars(self, raw_vars):
         self.vars.extend(parse_string_to_vars(raw_vars))
