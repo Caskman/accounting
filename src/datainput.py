@@ -15,17 +15,14 @@ CHASE_CREDIT = "chasecredit"
 Format of filename is <label>_<type>_<date>.csv
 """
 
-def parse_file(filepath):
+def parse_file(filepath, filecontents):
     filename = filepath.split("/")[-1].replace(".csv", "")
     filenamesplits = filename.split("_")
     if len(filenamesplits) > 3:
         raise Exception(f"{filepath} has an invalid filename")
     
     label, formattype, date = filenamesplits
-    filelines = []
-    with open(filepath, "r") as fin:
-        filelines = fin.readlines()
-        filelines = [l[:-1] if l[-1] == "\n" else l for l in filelines]
+    filelines = [l for l in filecontents.split('\n') if l.strip() != '']
         
     resultdata = None
     if formattype == BOA_CREDIT:
@@ -95,7 +92,7 @@ def parse_boacredit(lines, label):
     for row in parsed_lines:
         if len(row) < 5:
             raise Exception(f"Invalid number of cols for label: {label} data type: {BOA_CREDIT} cols: {len(row)}")
-        
+
         date = datetime.strptime(row[0], "%m/%d/%Y").date()
         reference_number = row[1]
         description = row[2]
@@ -138,29 +135,35 @@ def parse_boadebit(lines, label):
 
 # END PARSE FUNCTIONS
 
+# DATA SOURCES
 
-def get_data(data_dir):
+def get_local_data_source(data_dir):
     files = [abspath(join(data_dir, f)) for f in listdir(data_dir) if f[-4:] == ".csv"]
-
-    data = []
     for f in files:
-        d = parse_file(f)
+        contents = ''
+        with open(f, 'r') as fin:
+            contents = fin.read()
+        yield (f, contents)
+
+
+# END DATA SOURCES
+
+
+def parse_data_source(datasource):
+    data = []
+    for filepath, contents in datasource:
+        d = parse_file(filepath, contents)
         data.extend(d)
 
     return data
 
 TEMP_DIR = "temp"
 
-def get_data_last_month(data_dir):
-    data = get_data(data_dir)
+def parse_data_source_last_month(datasource):
+    data = parse_data_source(datasource)
     today = datetime.now().date()
     data_last_month = filter(lambda t: (today - t.date).days <= 30, data)
     return data_last_month
-
-
-def get_temp_dir_relative_path():
-    run_id = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
-    return f"{TEMP_DIR}-{run_id}"
 
 class Transaction():
     def __init__(self, date, desc, amt, label, ref_num, classification='none'):
@@ -185,4 +188,9 @@ class Transaction():
         return f"{{ {field_string} }}"
     def __str__(self):
         return self.__repl__()
+
+    def get_dict(self):
+        d = self.__dict__
+        d["date"] = d["date"].isoformat()
+        return d
 

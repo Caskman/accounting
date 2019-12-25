@@ -1,4 +1,6 @@
+from datetime import datetime
 import os
+from time import time
 
 LOCAL_ENV_VARS_FILENAME = "local.env"
 DOCKER_ENV_NAME = "DOCKERENV"
@@ -39,11 +41,21 @@ class Context():
         else:
             found = list(filter(lambda x: x.label == label, self.vars))
             if len(found) < 1:
-                raise Exception(f"Could not find var: {label}")
+                default_value = self.get_default_var(label)
+                if not default_value:
+                    raise Exception(f"Could not find var: {label}")
+                return default_value
             return found[0].value
+
+    def get_default_var(self, label):
+        if label == 'CONFIG_PATH':
+            return 'config.txt'
 
     def append_raw_vars(self, raw_vars):
         self.vars.extend(parse_string_to_vars(raw_vars))
+    
+    def get_run_id(self):
+        return int(time())
 
     def __repl__(self):
         return f"{{ {self.vars} }}"

@@ -6,16 +6,14 @@ import spreadsheet
 import datainput
 
 def compile_statements():
-    temp_dir = datainput.get_temp_dir_relative_path()
-
-    if not os.path.exists(temp_dir):
-        os.makedirs(temp_dir)
-    
     c = s3datasource.get_context()
+    LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
 
-    s3datasource.download_data(c, temp_dir)
-    data = datainput.get_data(temp_dir)
-    outputpath = os.path.join(temp_dir, f"aaa-output-{run_id}.xlsx")
+    datasource = datainput.get_local_data_source(LOCAL_DATA_DIR)
+    data = datainput.parse_data_source(datasource)
+
+    run_id = c.get_run_id()
+    outputpath = os.path.join(LOCAL_DATA_DIR, f"aaa-output-{run_id}.xlsx")
 
     resultfilepath = spreadsheet.build_spreadsheet(c, data, outputpath)
     return outputpath

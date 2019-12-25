@@ -9,7 +9,7 @@ def classify(transactions, rules):
         if len(positive_rule_results) > 1:
             lower_priority_rule_result_string = join_rule_result_names(positive_rule_results[1:])
             transaction.classification_debug = \
-                f"Lower priority rule results: {lower_priority_rule_result_string}"
+                f"Lesser classifications: {lower_priority_rule_result_string}"
 
 def join_rule_result_names(rule_results):
     names = map(lambda r: r["rule"]["name"], rule_results)
@@ -25,6 +25,9 @@ def rule_substring(rule_arg):
         return rule_substring in transaction.desc.lower() \
             or rule_substring in transaction.label.lower()
     return rule_fn
+
+# def rule_amount_sign(rule_arg):
+    
 
 # end rule functions
 ###############################################################################
