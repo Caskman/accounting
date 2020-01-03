@@ -45,6 +45,12 @@ def get_object(s3, bucket_id, key):
     contents = obj.get()['Body'].read().decode('utf-8')
     return contents
 
+def put_object_with_context(c, key, string_data):
+    s3 = gets3resource(c)
+    BUCKET_ID = c.get_var("BUCKET_ID")
+    obj = s3.Object(BUCKET_ID, key)
+    obj.put(Body=string_data)
+
 def get_context():
     c = context.init_context()
     CONFIG_PATH = c.get_var("CONFIG_PATH")
@@ -55,4 +61,16 @@ def get_context():
 def get_rules_contents(c):
     rules_key = c.get_var('RULES_PATH')
     return get_object_with_context(c, rules_key)
+
+def store_rules_contents(c, rules_data):
+    rules_key = c.get_var('RULES_PATH')
+    put_object_with_context(c, rules_key, rules_data)
+
+def get_transaction_data(c):
+    transaction_data_key = c.get_var('TRANSACTION_DATA_PATH')
+    return get_object_with_context(c, transaction_data_key)
+
+def store_transaction_data(c, string_data):
+    transaction_data_key = c.get_var('TRANSACTION_DATA_PATH')
+    put_object_with_context(c, transaction_data_key, string_data)
 

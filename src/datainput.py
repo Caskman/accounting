@@ -174,16 +174,17 @@ class Transaction():
         self.ref_num = ref_num
         self.classification = classification
         self.classification_debug = ''
-    def __repl__(self):
-        field_list = [
+    def field_order(self):
+        return [
             self.date,
             self.amt,
-            self.classification,
             self.desc,
-            self.classification_debug,
             self.label,
             self.ref_num,
+            self.classification,
         ]
+    def __repl__(self):
+        field_list = self.field_order()
         field_string = ", ".join(field_list)
         return f"{{ {field_string} }}"
     def __str__(self):

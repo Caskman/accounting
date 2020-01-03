@@ -124,7 +124,7 @@ c = s3datasource.get_context()
 LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
 
 datasource = datainput.get_local_data_source(LOCAL_DATA_DIR)
-data = list(datainput.parse_data_source(LdatasourceOCAL_DATA_DIR))
+data = list(datainput.parse_data_source(datasource))
 # data = list(datainput.parse_data_source_last_month(datasource))
 rules_contents = None
 with open(sys.argv[1],'r') as fin:
@@ -137,13 +137,16 @@ print(f"{len(classified_data)} of {len(data)} classified")
 
 # sorted_data = sorted(data, key=lambda t: t.date)
 sorted_data = data
-# sorted_data = sorted(sorted_data, key=lambda t: abs(float(t.amt)), reverse=True)
 sorted_data = sorted(sorted_data, key=lambda t: t.desc.lower(), reverse=False)
 sorted_data = sorted(sorted_data, key=lambda t: t.classification, reverse=False)
+sorted_data = sorted(sorted_data, key=lambda t: abs(float(t.amt)), reverse=True)
 # sorted_data = group_by_similarity(sorted_data)
 sorted_data = sorted(sorted_data, key=lambda t: True if t.classification == 'none' else False, reverse=True)
 
+classified_total = sum(map(lambda t: abs(t.amt), filter(lambda t: t.classification != 'none', sorted_data)))
+unclassified_total = sum(map(lambda t: abs(t.amt), filter(lambda t: t.classification == 'none', sorted_data)))
 
+print(f'classified = {classified_total} unclassified = {unclassified_total}')
 
 # output_path = f"classification_test_{c.get_run_id()}.xlsx"
 # output_spreadsheet(data, output_path)

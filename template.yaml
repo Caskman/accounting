@@ -15,29 +15,30 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: src/
-      Handler: lambda_classify.lambda_handler
+      Handler: lambda_classify.base
       Runtime: python3.7
       Policies: 
-        S3ReadPolicy:
+        S3CrudPolicy:
           BucketName: [[BUCKET_ID]]
       Events:
         Classifier:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /classify
+            Path: /base
             Method: post
       Environment:
         Variables:
           BUCKET_ID: [[BUCKET_ID]]
           IN_AWS_LAMBDA: 'true'
 
+
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  ClassifierApi:
-    Description: "API Gateway endpoint URL for Prod stage for Classifier function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/classify/"
+  ClassifierApiBaseUrl:
+    Description: "API Gateway endpoint URL for all Classifier functions"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
   ClassifierFunction:
     Description: "Classifier Lambda Function ARN"
     Value: !GetAtt ClassifierFunction.Arn
