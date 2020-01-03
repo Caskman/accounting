@@ -68,6 +68,8 @@ def pairify_fields(fields):
 def process_rules(rules_string):
     rules_lines = rules_string.split('\n')
     rules_lines = rules_lines[1:]
+    if len(rules_lines) == 0:
+        raise Exception('Empty rules')
     rules_lines = map(lambda l: l.strip(), rules_lines)
     rules_lines = filter(lambda l: l != "", rules_lines)
 
@@ -83,6 +85,8 @@ def process_rules(rules_string):
 
     for bare_rule_obj in bare_rule_objs:
         column_len = len(bare_rule_obj["columns"])
+        if column_len == 0:
+            raise Exception(f'Cannot have no components in a rule')
         if column_len % 2 != 0:
             raise Exception(f"Columns must be even numbered, getting {column_len}")
     
@@ -95,3 +99,11 @@ def process_rules(rules_string):
         }
         rule_objs.append(rule)
     return rule_objs
+
+if __name__ == '__main__':
+    import sys
+    # print(sys.argv)
+    with open(sys.argv[1],'r') as fin:
+        contents = fin.read()
+        rules = process_rules(contents)
+        print(rules)

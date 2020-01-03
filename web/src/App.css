@@ -1,0 +1,78 @@
+
+#root {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+}
+
+.finance-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.finance-viewer header {
+  text-align: center;
+}
+
+.finance-viewer footer {
+
+}
+
+.finance-viewer .main-body {
+  display: flex;
+  flex: 2;
+}
+
+.main-body .main {
+  flex: 2;
+  padding: 10px;
+  overflow-y: scroll;
+}
+
+.finance-viewer .modal {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items : center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  font-size: xx-large;
+  text-align: center;
+}
+
+.finance-viewer .modal-body {
+  background-color: white;
+  border: 1px solid #888;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.finance-viewer .modal-body input {
+  margin: 0;
+}
+
+.finance-viewer .modal-body button {
+  margin: 0;
+  margin-left: 10px;
+  position: relative;
+  top: -7px;
+}
+
+.finance-viewer .toast {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  border: 1px solid #888;
+  border-radius: 5px;
+  z-index: 10;
+  width: 200px;
+  height: 50px;
+  padding: 10px;
+  text-align: center;
+}

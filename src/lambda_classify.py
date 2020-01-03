@@ -4,15 +4,24 @@ import s3datasource
 import classify
 import datainput
 
+def response(body):
+    return {
+        'statusCode': 200,
+        'body': json.dumps(body),
+        'headers': {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Methods": "*",
+        },
+    }
+
+
 def get_transactions(event):
     my_context = s3datasource.get_context()
     data = s3datasource.get_transaction_data(my_context)
-    return {
-        'statusCode': 200,
-        'body': json.dumps({
-            "data": data,
-        }),
-    }
+    return response({
+        "data": data,
+    })
 
 def classify_transactions(event):
     my_context = s3datasource.get_context()
@@ -22,41 +31,34 @@ def classify_transactions(event):
     rules = classify.process_rules(rules_contents)
     classify.classify(data, rules)
     csv_data = "\n".join(map(lambda t: "\t".join(map(lambda f: str(f), t.field_order())), data))
-    # csv_rows = map(lambda t: "\t".join(t.field_order), data)
-    # csv_data = "\n".join(csv_rows)
-
-    # json_data = json.dumps([d.get_dict() for d in data])
     s3datasource.store_transaction_data(my_context, csv_data)
-    return {
-        'statusCode': 200,
-        'body': json.dumps({
-            "success": True,
-        }),
-    }
+    return response({
+        "success": True,
+    })
 
 def rules_get(event):
     my_context = s3datasource.get_context()
     rules_contents = s3datasource.get_rules_contents(my_context)
-    return {
-        'statusCode': 200,
-        'body': json.dumps({
-            "data": rules_contents,
-        }),
-    }
+    return response({
+        "data": rules_contents,
+    })
 
 def rules_put(event):
-    rules_contents = event["body"]["rules"]
+    rules_contents = json.loads(event["body"])['rules']
     my_context = s3datasource.get_context()
+    try:
+        classify.process_rules(rules_contents)
+    except:
+        return {
+            'statusCode': 400
+        }
     s3datasource.store_rules_contents(my_context, rules_contents)
-    return {
-        'statusCode': 200,
-        'body': json.dumps({
-            "success": True,
-        }),
-    }
+    return response({
+        "success": True,
+    })
 
 routes = {
-    'get_transactions': get_transactions,
+    'transactions_get': get_transactions,
     'classify': classify_transactions,
     'rules_get': rules_get,
     'rules_put': rules_put,
