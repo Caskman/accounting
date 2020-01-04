@@ -15,9 +15,23 @@ def response(body):
         },
     }
 
+def authenticate(event, c):
+    if 'body' not in event:
+        return False
+    body = json.loads(event['body'])
+    given_token = body['auth']
+    expected_token = s3datasource.get_auth_token(c)
+    return given_token == expected_token
+
+def bad_auth():
+    return {
+        'statusCode': 401,
+    }
 
 def get_transactions(event):
     my_context = s3datasource.get_context()
+    if not authenticate(event, my_context):
+        return bad_auth()
     data = s3datasource.get_transaction_data(my_context)
     return response({
         "data": data,
@@ -25,6 +39,8 @@ def get_transactions(event):
 
 def classify_transactions(event):
     my_context = s3datasource.get_context()
+    if not authenticate(event, my_context):
+        return bad_auth()
     datasource = s3datasource.get_data_source(my_context)
     data = datainput.parse_data_source(datasource)
     rules_contents = s3datasource.get_rules_contents(my_context)
@@ -38,14 +54,18 @@ def classify_transactions(event):
 
 def rules_get(event):
     my_context = s3datasource.get_context()
+    if not authenticate(event, my_context):
+        return bad_auth()
     rules_contents = s3datasource.get_rules_contents(my_context)
     return response({
         "data": rules_contents,
     })
 
 def rules_put(event):
-    rules_contents = json.loads(event["body"])['rules']
     my_context = s3datasource.get_context()
+    if not authenticate(event, my_context):
+        return bad_auth()
+    rules_contents = json.loads(event["body"])['rules']
     try:
         classify.process_rules(rules_contents)
     except:
@@ -76,7 +96,9 @@ def base(event, lambda_context):
     if route in routes:
         return routes[route](event)
     else:
-        raise Exception(f'Unknown route {route}')
+        return {
+            'statusCode': 400
+        }
 
 if __name__ == '__main__':
     classify_transactions(None)

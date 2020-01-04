@@ -74,3 +74,7 @@ def store_transaction_data(c, string_data):
     transaction_data_key = c.get_var('TRANSACTION_DATA_PATH')
     put_object_with_context(c, transaction_data_key, string_data)
 
+def get_auth_token(c):
+    auth_token_key = c.get_var('AUTH_TOKEN')
+    return auth_token_key
+

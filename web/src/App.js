@@ -1,146 +1,159 @@
-import React, { useEffect, useState, useRef } from "react";
-import "./App.css";
+import React, { useEffect, useState, useRef } from 'react'
+import './App.css'
 
 const download = (filename, text) => {
-  const element = document.createElement("a");
+  const element = document.createElement('a')
   element.setAttribute(
-    "href",
-    "data:text/plain;charset=utf-8," + encodeURIComponent(text)
-  );
-  element.setAttribute("download", filename);
+    'href',
+    'data:text/plain;charset=utf-8,' + encodeURIComponent(text)
+  )
+  element.setAttribute('download', filename)
 
-  element.style.display = "none";
-  document.body.appendChild(element);
+  element.style.display = 'none'
+  document.body.appendChild(element)
 
-  element.click();
+  element.click()
 
-  document.body.removeChild(element);
-};
+  document.body.removeChild(element)
+}
 
 const getAccessString = () => {
-  return localStorage.getItem("access_string");
-};
+  return localStorage.getItem('access_string')
+}
 
 const putAccessString = access_string => {
-  localStorage.setItem("access_string", access_string);
-};
+  localStorage.setItem('access_string', access_string)
+}
 
-const getApigw = () => getAccessString();
+const getApigw = () => getAccessString().split('.')[0]
 
 const getUrl = route => {
-  const apigw = getApigw();
-  return `https://${apigw}.execute-api.us-east-1.amazonaws.com/Prod/base?route=${route}`;
-};
+  const apigw = getApigw()
+  return `https://${apigw}.execute-api.us-east-1.amazonaws.com/Prod/base?route=${route}`
+}
 
-const fetchApi = async (route, options) => {
-  const url = getUrl(route);
-  const response = await fetch(url, {
-    method: "post",
-    ...options
-  }).then(r => r.json());
-  return response.data;
-};
+const getAuthToken = () => getAccessString().split('.')[1]
+
+const fetchApi = async (route, extraBody) => {
+  const url = getUrl(route)
+  let body = {
+    auth: getAuthToken(),
+  }
+  if (extraBody) {
+    body = {
+      ...body,
+      ...extraBody,
+    }
+  }
+  const options = {
+    method: 'post',
+    body: JSON.stringify(body),
+  }
+  const response = await fetch(url, options).then(r => r.json())
+  return response.data
+}
 
 function App() {
-  const rulesUploadRef = useRef(null);
-  const [loadingText, setLoadingText] = useState("");
-  const [toastText, setToastText] = useState("");
-  const [toastTimeout, setToastTimeout] = useState(null);
-  const [accessStringInput, setAccessStringInput] = useState("");
-  const [validAccessString, setValidAccessString] = useState(true);
+  const rulesUploadRef = useRef(null)
+  const [loadingText, setLoadingText] = useState('')
+  const [toastText, setToastText] = useState('')
+  const [toastTimeout, setToastTimeout] = useState(null)
+  const [accessStringInput, setAccessStringInput] = useState('')
+  const [validAccessString, setValidAccessString] = useState(true)
 
   const toast = text => {
     if (toastTimeout) {
-      clearTimeout(toastTimeout);
+      clearTimeout(toastTimeout)
     }
-    setToastText(text);
+    setToastText(text)
     const timeoutId = setTimeout(() => {
-      clearTimeout(toastTimeout);
-      setToastTimeout(null);
-      setToastText("");
-    }, 10000);
-    setToastTimeout(timeoutId);
-  };
+      clearTimeout(toastTimeout)
+      setToastTimeout(null)
+      setToastText('')
+    }, 10000)
+    setToastTimeout(timeoutId)
+  }
 
   const errorHandler = async fn => {
     try {
-      await fn();
+      await fn()
     } catch (e) {
-      toast("Error occurred");
-      setLoadingText("");
-      throw e;
+      toast('Error occurred')
+      setLoadingText('')
+      throw e
     }
-  };
+  }
 
   const uploadRules = async () => {
     errorHandler(async () => {
-      const file = rulesUploadRef.current.files[0];
+      const file = rulesUploadRef.current.files[0]
 
       const contents = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsText(file, "UTF-8");
-        reader.onload = e => resolve(e.target.result);
-        reader.onerror = e => reject(e);
-      });
+        const reader = new FileReader()
+        reader.readAsText(file, 'UTF-8')
+        reader.onload = e => resolve(e.target.result)
+        reader.onerror = e => reject(e)
+      })
 
-      setLoadingText("Uploading Rules");
-      await fetchApi("rules_put", {
-        body: JSON.stringify({ rules: contents })
-      });
-      setLoadingText("");
-      toast("Uploading Rules Successful!");
-    });
-  };
+      setLoadingText('Uploading Rules')
+      await fetchApi('rules_put', { rules: contents })
+      setLoadingText('')
+      toast('Uploading Rules Successful!')
+    })
+  }
 
   const downloadTransactions = async () => {
     errorHandler(async () => {
-      setLoadingText("Downloading Transactions");
-      const transactions = await fetchApi("transactions_get");
-      setLoadingText("");
-      download("transactions.csv", transactions);
-    });
-  };
+      setLoadingText('Downloading Transactions')
+      const transactions = await fetchApi('transactions_get')
+      setLoadingText('')
+      download('transactions.csv', transactions)
+    })
+  }
 
   const downloadRules = async () => {
     errorHandler(async () => {
-      setLoadingText("Downloading Rules");
-      const transactions = await fetchApi("rules_get");
-      setLoadingText("");
-      download("classification_rules.csv", transactions);
-    });
-  };
+      setLoadingText('Downloading Rules')
+      const transactions = await fetchApi('rules_get')
+      setLoadingText('')
+      download('classification_rules.csv', transactions)
+    })
+  }
 
   const classify = async () => {
     errorHandler(async () => {
-      setLoadingText("Classifying");
-      await fetchApi("classify");
-      setLoadingText("");
-      toast("Classification Successful!");
-    });
-  };
+      setLoadingText('Classifying')
+      await fetchApi('classify')
+      setLoadingText('')
+      toast('Classification Successful!')
+    })
+  }
 
   const verifyAccessString = () => {
     if (accessStringInput) {
-      putAccessString(accessStringInput);
-      setValidAccessString(true);
+      putAccessString(accessStringInput)
+      setValidAccessString(true)
     }
-  };
+  }
 
   useEffect(() => {
-    const localStorageAccessString = getAccessString();
+    const localStorageAccessString = getAccessString()
     if (!localStorageAccessString) {
-      setValidAccessString(false);
+      setValidAccessString(false)
     }
-  }, []);
+  }, [])
 
-  const showModal = !!loadingText || !validAccessString;
+  const showModal = !!loadingText || !validAccessString
 
   return (
     <div className="finance-viewer">
       {showModal ? (
         <div className="modal">
           <div className="modal-body">
-            {loadingText}
+            <div className="loader-container">
+              <div>{loadingText}</div>
+              <div class="lds-hourglass"></div>
+            </div>
             {!validAccessString ? (
               <section>
                 <section>Please provide access string</section>
@@ -195,7 +208,7 @@ function App() {
       </section>
       <footer></footer>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
