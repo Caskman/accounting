@@ -150,10 +150,12 @@ function App() {
       {showModal ? (
         <div className="modal">
           <div className="modal-body">
-            <div className="loader-container">
-              <div>{loadingText}</div>
-              <div class="lds-hourglass"></div>
-            </div>
+            {loadingText ? (
+              <div className="loader-container">
+                <div>{loadingText}</div>
+                <div class="lds-hourglass"></div>
+              </div>
+            ) : null}
             {!validAccessString ? (
               <section>
                 <section>Please provide access string</section>
