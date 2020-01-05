@@ -11,7 +11,7 @@ def convert_transaction_to_string(transaction):
         transaction.desc,
         transaction.amt,
         transaction.date,
-        transaction.label,
+        transaction.source,
     ]
     first = True
     line = ""

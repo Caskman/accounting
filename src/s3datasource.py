@@ -1,19 +1,9 @@
-import boto3
 import os
-
+import aws
 import context
 
-def gets3resource(c):
-    if c.get_var('IN_AWS_LAMBDA') == 'true':
-        return boto3.resource('s3')
-    AWS_ACCESS_KEY_ID = c.get_var("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = c.get_var("AWS_SECRET_ACCESS_KEY")
-    session = boto3.session.Session(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-    s3 = session.resource("s3")
-    return s3
-
 def download_data(c, target_dir):
-    s3 = gets3resource(c)
+    s3 = aws.gets3resource(c)
     BUCKET_ID = c.get_var("BUCKET_ID")
     mybucket = s3.Bucket(BUCKET_ID)
 
@@ -26,7 +16,7 @@ def download_data(c, target_dir):
             mybucket.download_file(obj.key, destfilepath)
 
 def get_data_source(c):
-    s3 = gets3resource(c)
+    s3 = aws.gets3resource(c)
     bucket_id = c.get_var("BUCKET_ID")
     statement_path = c.get_var('STATEMENT_PATH')
     for obj in s3.Bucket(bucket_id).objects.filter(Prefix=f"{statement_path}/"):
@@ -36,7 +26,7 @@ def get_data_source(c):
 
 
 def get_object_with_context(c, key):
-    s3 = gets3resource(c)
+    s3 = aws.gets3resource(c)
     BUCKET_ID = c.get_var("BUCKET_ID")
     return get_object(s3, BUCKET_ID, key)
 
@@ -46,7 +36,7 @@ def get_object(s3, bucket_id, key):
     return contents
 
 def put_object_with_context(c, key, string_data):
-    s3 = gets3resource(c)
+    s3 = aws.gets3resource(c)
     BUCKET_ID = c.get_var("BUCKET_ID")
     obj = s3.Object(BUCKET_ID, key)
     obj.put(Body=string_data)

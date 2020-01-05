@@ -23,7 +23,7 @@ def rule_substring(rule_arg):
     rule_substring = rule_arg.lower()
     def rule_fn(transaction):
         return rule_substring in transaction.desc.lower() \
-            or rule_substring in transaction.label.lower()
+            or rule_substring in transaction.source.lower()
     return rule_fn
 
 # def rule_amount_sign(rule_arg):
