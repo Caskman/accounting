@@ -15,7 +15,7 @@ def compile_statements():
     run_id = c.get_run_id()
     outputpath = os.path.join(LOCAL_DATA_DIR, f"aaa-output-{run_id}.xlsx")
 
-    resultfilepath = spreadsheet.build_spreadsheet(c, data, outputpath)
+    spreadsheet.build_spreadsheet(c, data, outputpath)
     return outputpath
 
 if __name__ == "__main__":

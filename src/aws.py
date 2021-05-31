@@ -11,8 +11,3 @@ def gets3resource(c):
     session = getsession(c)
     s3 = session.resource("s3")
     return s3
-
-def getdb(c):
-    if c.get_var('IN_AWS_LAMBDA') == 'true':
-        return boto3.resource('dynamodb')
-    return getsession(c).resource('dynamodb')
