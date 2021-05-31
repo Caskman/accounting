@@ -1,6 +1,6 @@
 from decimal import Decimal
 from datetime import datetime
-from os import listdir
+from os import error, listdir
 from os.path import join, abspath
 import csv
 import re
@@ -46,12 +46,15 @@ def parse_chasecredit(lines, source):
     parsed_lines = parsed_lines[1:]
     return_data = []
     for row in parsed_lines:
-        if len(row) != 6:
-            raise Exception(f"Invalid number of cols for source: {source} data type: {CHASE_CREDIT} cols: {len(row)}")
+        if not len(row) in [6,7]:
+            raise Exception(f"Invalid number of cols for source: {source} data type: {CHASE_CREDIT} cols: {len(row)}\nRow is:\n{row}")
         
         date = datetime.strptime(row[1], "%m/%d/%Y").date()
         amount = Decimal(re.sub(r"\"|\$", "", row[5]))
         description = f"{row[2]}; {row[3]}; {row[4]}"
+        memo = None
+        if len(row) == 7:
+            memo = row[6]
 
         new_item = Transaction(
             None,
@@ -59,7 +62,7 @@ def parse_chasecredit(lines, source):
             description,
             amount,
             source,
-            None,
+            memo=memo,
         )
         return_data.append(new_item)
 
@@ -153,6 +156,16 @@ def get_local_data_source(data_dir):
 
 # END DATA SOURCES
 
+def output_data_validation(datasource):
+    errors=[]
+    for filepath, contents in datasource:
+        try:
+            parse_file(filepath, contents)
+        except Exception as e:
+            errors.append([filepath,contents,e])
+            print(f"Error: {filepath}\n\tException:\n\t{str(e)}")
+    print(f"Total errors: {len(errors)}")
+
 
 def parse_data_source(datasource):
     data = []
@@ -171,7 +184,7 @@ def parse_data_source_last_month(datasource):
     return data_last_month
 
 class Transaction():
-    def __init__(self, identifier, date, desc, amt, source, ref_num, classification='none'):
+    def __init__(self, identifier, date, desc, amt, source, ref_num=None, classification='none',memo=''):
         self.id = identifier
         self.date = date
         self.desc = desc
@@ -180,6 +193,7 @@ class Transaction():
         self.ref_num = ref_num
         self.classification = classification
         self.classification_debug = ''
+        self.memo=memo
     @staticmethod
     def from_dict(d):
         return Transaction(
@@ -190,6 +204,7 @@ class Transaction():
             str(d['source']),
             str(d['ref_num']),
             str(d['classification']),
+            str(d['memo']),
         )
     def get_persistent_dict(self):
         return {
@@ -200,6 +215,7 @@ class Transaction():
             'source': str(self.source),
             'ref_num': str(self.ref_num),
             'classification': str(self.classification),
+            'memo': str(self.memo),
         }
     def get_json_dict(self):
         d = self.get_persistent_dict()
@@ -211,6 +227,7 @@ class Transaction():
             self.date,
             self.amt,
             self.desc,
+            self.memo,
             self.classification,
             self.source,
             self.ref_num,

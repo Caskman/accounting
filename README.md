@@ -6,6 +6,20 @@
 4. Install dependencies `pip install -r requirements.txt`
 5. Establish your local.env file as stated below
 
+## Download Data
+
+First set your venv
+
+`source venv/bin/activate`
+
+then download the data
+
+`python src/download_data.py`
+
+then you'll want to validate the data
+
+`python src/validate_local_data.py`
+
 ## Deploy
 
 Run the `deploy` script

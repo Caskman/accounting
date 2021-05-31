@@ -2,6 +2,8 @@ import os
 import aws
 import context
 
+# Downloads data into target dir
+# Make sure target dir exists
 def download_data(c, target_dir):
     s3 = aws.gets3resource(c)
     BUCKET_ID = c.get_var("BUCKET_ID")
