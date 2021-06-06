@@ -6,6 +6,7 @@ import spreadsheet
 import datainput
 import classify
 
+
 def USD(val):
     return "{:.2f}".format(float(val))
 
