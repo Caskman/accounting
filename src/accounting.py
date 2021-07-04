@@ -13,10 +13,6 @@ work_income_class = ['Income']
 investment_class = ['Investments']
 
 
-def USD(val):
-    return "{:.2f}".format(float(val))
-
-
 def compile_data_into_spreadsheet():
     c = s3datasource.get_context()
     LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
@@ -31,16 +27,16 @@ def compile_data_into_spreadsheet():
     return outputpath
 
 
-def group_sort_transactions(trans):
+def group_sort_transactions(data_is, ix):
     # Group expenses
-    group_keys = list(set(map(lambda t: t.classification, trans)))
+    group_keys = list(set(map(lambda i: ix(i).classification, data_is)))
     group_mapping = [[] for k in group_keys]
-    for t_i, t in enumerate(trans):
-        group_i = group_keys.index(t.classification)
-        group_mapping[group_i].append(t_i)
+    for i in data_is:
+        group_i = group_keys.index(ix(i).classification)
+        group_mapping[group_i].append(i)
 
     # Calculate expense group sums
-    group_sums = [sum(map(lambda t_i: trans[t_i].amt, group_mapping[eg_i]))
+    group_sums = [sum(map(lambda i: ix(i).amt, group_mapping[eg_i]))
                   for eg_i, k in enumerate(group_keys)]
 
     # Sort expense groups by their totals
@@ -49,33 +45,29 @@ def group_sort_transactions(trans):
     return [group_keys, group_sums, group_sorted]
 
 
-def pull(src, indices):
-    return [src[i] for i in indices]
-
-
-def analyze_financial_data(transaction_data):
-    income = [t for t in transaction_data if t.amt > 0]
-    income_sum = sum(map(lambda t: t.amt, income))
+def analyze_financial_data(data_is, ix):
+    income = [i for i in data_is if ix(i).amt > 0]
+    income_sum = sum(map(lambda i: ix(i).amt, income))
 
     # work income is a collection of classes
     work_income = [
-        t_i for t_i, t in enumerate(income) if t.classification in work_income_class]
-    work_income_sum = sum(map(lambda i: income[i].amt, work_income))
+        i for i in income if ix(i).classification in work_income_class]
+    work_income_sum = sum(map(lambda i: ix(i).amt, work_income))
 
     # non work income is everything else
-    non_work_income = [t_i for t_i, t in enumerate(
-        income) if not t_i in work_income]
-    non_work_income_sum = sum(map(lambda i: income[i].amt, non_work_income))
+    non_work_income = [i for i in
+                       income if not i in work_income]
+    non_work_income_sum = sum(map(lambda i: ix(i).amt, non_work_income))
     income = Income(income, income_sum, work_income,
                     work_income_sum, non_work_income, non_work_income_sum)
 
     # expenses are less than 0
-    expenses = [t for t in transaction_data if t.amt < 0]
-    expenses_sum = sum(map(lambda t: t.amt, expenses))
+    expenses = [i for i in data_is if ix(i).amt < 0]
+    expenses_sum = sum(map(lambda i: ix(i).amt, expenses))
 
     # group expenses by class, calculate sums, and sort
     [expense_group_keys, expense_group_sums,
-        expense_group_sorted] = group_sort_transactions(expenses)
+        expense_group_sorted] = group_sort_transactions(expenses, ix)
     expenses_groups_coll = ExpenseGroupColl(
         expense_group_keys, expense_group_sums, expense_group_sorted)
     expenses = Expenses(expenses, expenses_sum, expenses_groups_coll)
@@ -86,30 +78,31 @@ def compile_data():
     c = s3datasource.get_context()
     LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
 
-    # Load data
-    datasource = datainput.get_local_data_source(LOCAL_DATA_DIR)
-    data = datainput.parse_data_source(datasource)
-
-    # Create a year cutoff
-    now = datetime.datetime.now()
-    year = now.year
-    month = now.month
-    cutoff = datetime.datetime(year-1, month, 1).date()
-    last_years_data = [t for t in data if t.date >= cutoff]
-
     # Load classification rules
     rules_contents = None
     with open('classification_rules.csv', 'r') as fin:
         rules_contents = fin.read()
     rules = classify.process_rules(rules_contents)
 
+    # Load data
+    datasource = datainput.get_local_data_source(LOCAL_DATA_DIR)
+    data_all_time = datainput.parse_data_source(datasource)
+
+    # Create a year cutoff
+    now = datetime.datetime.now()
+    year = now.year
+    month = now.month
+    cutoff = datetime.datetime(year-1, month, 1).date()
+    main_data = [t for t in data_all_time if t.date >= cutoff]
+    def ix(i): return main_data[i]
+    # il = lambda l: [ix(i) for i in l]
+
     # Classify data
-    classify.classify(last_years_data, rules)
+    classify.classify(main_data, rules)
 
     # Filter out internal trans
-    whole_data = last_years_data
     wdata = list(
-        filter(lambda t: not t.classification in ignored_class, whole_data))
+        filter(lambda i: not ix(i).classification in ignored_class, range(len(main_data))))
 
     # Breakdown into months
 
@@ -119,73 +112,51 @@ def compile_data():
 
     def months_key(date_obj):
         return datetime.datetime.strptime(f"{date_obj.year}-{date_obj.month}", "%Y-%m").date()
-    for t in wdata:
-        key = months_key(t.date)
+    for i in wdata:
+        key = months_key(ix(i).date)
         if not key in months_dict:
             months_dict[key] = []
         month_list = months_dict[key]
-        month_list.append(t)
+        month_list.append(i)
 
     # Turn groups into Month objects and classify income vs expenses
     for month_key in months_dict.keys():
-        i, e = analyze_financial_data(months_dict[month_key])
+        i, e = analyze_financial_data(months_dict[month_key], ix)
         months_dict[month_key] = Month(month_key, i, e)
 
-        # transaction_data = months_dict[month_key]
-        # # positive amounts are income
-        # income = [t for t in transaction_data if t.amt > 0]
-        # income_sum = sum(map(lambda t: t.amt,income))
-
-        # # work income is a collection of classes
-        # work_income = [
-        #     t_i for t_i, t in enumerate(income) if t.classification in work_income_class]
-        # work_income_sum = sum(map(lambda i: income[i].amt,work_income))
-
-        # # non work income is everything else
-        # non_work_income = [t_i for t_i,t in enumerate(income) if not t_i in work_income]
-        # non_work_income_sum = sum(map(lambda i: income[i].amt,non_work_income))
-        # income = Income(income, income_sum,work_income,work_income_sum, non_work_income,non_work_income_sum)
-
-        # # expenses are less than 0
-        # expenses = [t for t in transaction_data if t.amt < 0]
-        # expenses_sum = sum(map(lambda t: t.amt,expenses))
-
-        # # group expenses by class, calculate sums, and sort
-        # [expense_group_keys, expense_group_sums,
-        #     expense_group_sorted] = group_sort_transactions(expenses)
-        # expenses_groups_coll = ExpenseGroupColl(expense_group_keys, expense_group_sums, expense_group_sorted)
-        # expenses = Expenses(expenses,expenses_sum, expenses_groups_coll)
-
-        # months_dict[month_key] = Month(month_key, income, expenses)
+    total_i, total_e = analyze_financial_data(wdata, ix)
+    investments = list(
+        filter(lambda i: ix(i).classification in investment_class, range(len(main_data))))
+    investments_sum = sum(map(lambda i: ix(i).amt, investments))
+    year_finances = Year(cutoff, total_i, total_e,
+                         investments, investments_sum)
+    finances = Finances(main_data, year_finances, months_dict)
 
     # Print out month by month results
 
+    f = finances
+
+    def USD(val):
+        return "{:.2f}".format(float(val))
+
     # prints the top five trans by absolute dollar amount
 
-    def printTop5(trans: Sequence[Transaction]):
-        for t in sorted(trans, key=lambda t: abs(float(t.amt)), reverse=True)[:5]:
+    def printTop5(data_is: Sequence[int]):
+        for i in sorted(data_is, key=lambda i: abs(float(f.ix(i).amt)), reverse=True)[:5]:
+            t = f.ix(i)
             print(f"\t{float(t.amt)}\t{t.classification}\t{t.desc}")
 
     # Sort the month keys and print in month order
-    sorted_month_keys = sorted(months_dict.keys())
+    sorted_month_keys = sorted(finances.month_finances.keys())
     for month_key in sorted_month_keys:
-        month_obj = months_dict[month_key]
-
-        # # identify work income separate from other income
-        # work_income = [
-        #     t for t in month_obj.income if t.classification in work_income_class]
-        # non_work_income = [t for t in month_obj.income if not t in work_income]
-
-        # [expense_group_keys, expense_group_sums,
-        #     expense_group_sorted] = group_sort_transactions(month_obj.expense)
+        month_obj = finances.month_finances[month_key]
 
         print(str(month_key))
         print(
             f"Income: {USD(month_obj.income.income_sum)}")
         print(
             f"\tWork income: {USD(month_obj.income.workincomesum)}")
-        printTop5(pull(month_obj.income.income,
-                  month_obj.income.nonworkincome))
+        printTop5(month_obj.income.nonworkincome)
         print(
             f"Expenses: {USD(month_obj.expense.expensessum)}")
         print(f"Top expenses:")
@@ -198,21 +169,6 @@ def compile_data():
         print()
 
     # Print out 12-month report
-    total_i, total_e = analyze_financial_data(wdata)
-    investments = list(
-        filter(lambda t: t.classification in investment_class, whole_data))
-    investments_sum = sum(map(lambda t: t.amt, investments))
-    year_finances = Year(cutoff, total_i, total_e,
-                         investments, investments_sum)
-    finances = Finances(year_finances, months_dict)
-
-    # income = [t for t in wdata if t.amt > 0]
-    # expenses = [t for t in wdata if t.amt < 0]
-
-    # # Calculate expense groups
-    # [expense_group_keys, expense_group_sums,
-    #     expense_group_sorted] = group_sort_transactions(expenses)
-
     print()
     print(f"Since {finances.year_finances.cutoff_date}:")
     print(f"Income: {USD(finances.year_finances.income.income_sum)}")
@@ -226,9 +182,9 @@ def compile_data():
 
     # Print out unclassified data if any
     classified_data = [
-        t for t in last_years_data if t.classification != 'none']
+        t for t in main_data if t.classification != 'none']
     unclassified_data = [
-        t for t in last_years_data if t.classification == 'none']
+        t for t in main_data if t.classification == 'none']
 
     if len(unclassified_data) > 0:
         for t in unclassified_data:
@@ -236,11 +192,11 @@ def compile_data():
 
         print(f"classified {len(list(classified_data))}")
         print(f"unclassified {len(list(unclassified_data))}")
-        print(f"total data {len(list(last_years_data))}")
+        print(f"total data {len(list(main_data))}")
 
 
 class Income():
-    def __init__(self, income: Sequence[Transaction], income_sum: int, workincome: Sequence[int], workincomesum: int, nonworkincome: Sequence[int], nonworkincomesum: int):
+    def __init__(self, income: Sequence[int], income_sum: int, workincome: Sequence[int], workincomesum: int, nonworkincome: Sequence[int], nonworkincomesum: int):
         self.income = income
         self.income_sum = income_sum
         self.workincome = workincome
@@ -257,7 +213,7 @@ class ExpenseGroupColl():
 
 
 class Expenses():
-    def __init__(self, expenses: Sequence[Transaction], expensessum: int, expensegroupcoll: ExpenseGroupColl):
+    def __init__(self, expenses: Sequence[int], expensessum: int, expensegroupcoll: ExpenseGroupColl):
         self.expenses = expenses
         self.expensessum = expensessum
         self.expensegroupcoll = expensegroupcoll
@@ -271,7 +227,7 @@ class Month():
 
 
 class Year():
-    def __init__(self, cutoff_date: datetime.date, income: Income, expense: Expenses, investments: Sequence[Transaction], investments_sum: int):
+    def __init__(self, cutoff_date: datetime.date, income: Income, expense: Expenses, investments: Sequence[int], investments_sum: int):
         self.cutoff_date = cutoff_date
         self.income = income
         self.expense = expense
@@ -280,9 +236,13 @@ class Year():
 
 
 class Finances():
-    def __init__(self, year_finances: Year, month_finances: Dict[datetime.date, Month]):
+    def __init__(self, source: Sequence[Transaction], year_finances: Year, month_finances: Dict[datetime.date, Month]):
+        self.source = source
         self.year_finances = year_finances
         self.month_finances = month_finances
+
+    def ix(self, i):
+        return self.source[i]
 
 
 if __name__ == "__main__":
