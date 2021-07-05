@@ -95,7 +95,6 @@ def compile_data():
     cutoff = datetime.datetime(year-1, month, 1).date()
     main_data = [t for t in data_all_time if t.date >= cutoff]
     def ix(i): return main_data[i]
-    # il = lambda l: [ix(i) for i in l]
 
     # Classify data
     classify.classify(main_data, rules)
@@ -130,7 +129,13 @@ def compile_data():
     investments_sum = sum(map(lambda i: ix(i).amt, investments))
     year_finances = Year(cutoff, total_i, total_e,
                          investments, investments_sum)
-    finances = Finances(main_data, year_finances, months_dict)
+    classified = [
+        i for i in range(len(main_data)) if ix(i).classification != 'none']
+    unclassified = [
+        i for i in range(len(main_data)) if ix(i).classification == 'none']
+
+    finances = Finances(main_data, year_finances,
+                        months_dict, classified, unclassified)
 
     # Print out month by month results
 
@@ -181,18 +186,13 @@ def compile_data():
             f"\t{egc.group_keys[eg_i]}\t{USD(egc.group_sums[eg_i])}")
 
     # Print out unclassified data if any
-    classified_data = [
-        t for t in main_data if t.classification != 'none']
-    unclassified_data = [
-        t for t in main_data if t.classification == 'none']
+    if len(finances.unclassified) > 0:
+        for i in finances.unclassified:
+            print(str(ix(i)))
 
-    if len(unclassified_data) > 0:
-        for t in unclassified_data:
-            print(str(t))
-
-        print(f"classified {len(list(classified_data))}")
-        print(f"unclassified {len(list(unclassified_data))}")
-        print(f"total data {len(list(main_data))}")
+        print(f"classified {len(finances.classified)}")
+        print(f"unclassified {len(finances.unclassified)}")
+        print(f"total data {len(finances.source)}")
 
 
 class Income():
@@ -236,10 +236,12 @@ class Year():
 
 
 class Finances():
-    def __init__(self, source: Sequence[Transaction], year_finances: Year, month_finances: Dict[datetime.date, Month]):
+    def __init__(self, source: Sequence[Transaction], year_finances: Year, month_finances: Dict[datetime.date, Month], classified: Sequence[int], unclassified: Sequence[int]):
         self.source = source
         self.year_finances = year_finances
         self.month_finances = month_finances
+        self.classified = classified
+        self.unclassified = unclassified
 
     def ix(self, i):
         return self.source[i]
