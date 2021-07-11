@@ -1,6 +1,8 @@
+from copy import copy
 import datetime
+from decimal import Decimal
 import classify
-from typing import Sequence, Dict
+from typing import Callable, Sequence, Dict
 from datainput import Transaction
 
 
@@ -10,22 +12,29 @@ investment_class = ['Investments']
 returns_class = ['Returns']
 
 
-def group_sort_transactions(data_is, ix):
-    # Group expenses
+def group_sort_transactions(data_is: Sequence[int], ix: Callable[[int], Transaction]):
+    # Calculate total sum
+    total_sum = sum(map(lambda i: abs(ix(i).amt), data_is))
+
+    # Group transactions
     group_keys = list(set(map(lambda i: ix(i).classification, data_is)))
     group_mapping = [[] for k in group_keys]
     for i in data_is:
         group_i = group_keys.index(ix(i).classification)
         group_mapping[group_i].append(i)
 
-    # Calculate expense group sums
+    # Calculate transaction group sums
     group_sums = [sum(map(lambda i: ix(i).amt, group_mapping[eg_i]))
                   for eg_i, k in enumerate(group_keys)]
+
+    # Calculate group percentages
+    group_percentages = [
+        abs(group_sums[i])/total_sum for i in range(len(group_keys))]
 
     # Sort expense groups by their totals
     group_sorted = sorted(range(len(group_keys)),
                           key=lambda eg_i: group_sums[eg_i])
-    return [group_keys, group_sums, group_sorted]
+    return [group_keys, group_sums, group_percentages, group_sorted]
 
 
 def analyze_financial_data(data_is, ix):
@@ -55,15 +64,21 @@ def analyze_financial_data(data_is, ix):
     expenses_sum = sum(map(lambda i: ix(i).amt, expenses))
 
     # group expenses by class, calculate sums, and sort
-    [expense_group_keys, expense_group_sums,
+    [expense_group_keys, expense_group_sums, expense_group_percentages,
         expense_group_sorted] = group_sort_transactions(expenses, ix)
     expenses_groups_coll = ExpenseGroupColl(
-        expense_group_keys, expense_group_sums, expense_group_sorted)
+        expense_group_keys, expense_group_sums, expense_group_percentages, expense_group_sorted)
     expenses = Expenses(expenses, expenses_sum, expenses_groups_coll)
 
     amount_saved = abs(income_sum) - abs(expenses_sum)
-    saving_ratio = amount_saved / abs(work_income_sum)
-    savings = Savings(amount_saved, saving_ratio)
+    saving_ratio = amount_saved / abs(income_sum)
+    savings_goals = [Decimal(0.05*step) for step in range(11)]
+    savings_goal_amts = [goal*income_sum for goal in savings_goals]
+    savings_goal_leftover = [amount_saved -
+                             goal_amt for goal_amt in savings_goal_amts]
+
+    savings = Savings(amount_saved, saving_ratio, savings_goals,
+                      savings_goal_amts, savings_goal_leftover)
 
     return (income, expenses, savings)
 
@@ -109,17 +124,35 @@ def compile_data(data: Sequence[Transaction], rules, cutoff_date: datetime.date)
             months_dict[month_key], ix)
         months_dict[month_key] = Month(month_key, income, expenses, savings)
 
-    total_income, total_expenses, total_savings = analyze_financial_data(
+    # Compile data on the whole period
+    total_income, total_expenses, gross_savings = analyze_financial_data(
         wdata, ix)
     investments = list(
         filter(lambda i: ix(i).classification in investment_class, range(len(main_data))))
     investments_sum = sum(map(lambda i: ix(i).amt, investments))
-    year_finances = WholePeriod(cutoff_date, total_income, total_expenses, total_savings,
-                                investments, investments_sum)
 
+    # Calculate how many months the data covers
+    min_date = min(map(lambda t: t.date, main_data))
+    max_date = max(map(lambda t: t.date, main_data))
+    whole_period_days = (max_date - min_date).days
+    whole_period_months = round(whole_period_days / 30)
+
+    # Create avg month savings object
+    avg_month_amount_saved = gross_savings.amount_saved / whole_period_months
+    avg_month_savings_goals = copy(gross_savings.savings_goals)
+    avg_month_savings_goal_amts = [
+        a/whole_period_months for a in gross_savings.savings_goal_amts]
+    avg_month_savings_goal_leftover = [
+        a/whole_period_months for a in gross_savings.savings_goal_leftover]
+    avg_month_savings = Savings(avg_month_amount_saved, gross_savings.saving_ratio,
+                                avg_month_savings_goals, avg_month_savings_goal_amts, avg_month_savings_goal_leftover)
+
+    whole_period_finances = WholePeriod(cutoff_date, whole_period_months, total_income, total_expenses, gross_savings, avg_month_savings,
+                                        investments, investments_sum)
+
+    # Create final Finances object
     ignored_transactions = [i for i in range(len(main_data)) if i not in wdata]
-
-    finances = Finances(main_data, year_finances,
+    finances = Finances(main_data, whole_period_finances,
                         months_dict, ignored_transactions, class_errors)
     return finances
 
@@ -137,9 +170,10 @@ class Income():
 
 
 class ExpenseGroupColl():
-    def __init__(self, group_keys: Sequence[str], group_sums: Sequence[int], group_sums_sorted: Sequence[int]):
+    def __init__(self, group_keys: Sequence[str], group_sums: Sequence[int], group_percentages: Sequence[float], group_sums_sorted: Sequence[int]):
         self.group_keys = group_keys
         self.group_sums = group_sums
+        self.group_percentages = group_percentages
         self.group_sums_sorted = group_sums_sorted
 
 
@@ -151,9 +185,12 @@ class Expenses():
 
 
 class Savings():
-    def __init__(self, amount_saved: float, saving_ratio: float):
+    def __init__(self, amount_saved: float, saving_ratio: float, savings_goals: Sequence[float], savings_goal_amts: Sequence[float], savings_goal_leftover: Sequence[float]):
         self.amount_saved = amount_saved
         self.saving_ratio = saving_ratio
+        self.savings_goals = savings_goals
+        self.savings_goal_amts = savings_goal_amts
+        self.savings_goal_leftover = savings_goal_leftover
 
 
 class Month():
@@ -165,11 +202,13 @@ class Month():
 
 
 class WholePeriod():
-    def __init__(self, cutoff_date: datetime.date, income: Income, expense: Expenses, savings: Savings, investments: Sequence[int], investments_sum: int):
+    def __init__(self, cutoff_date: datetime.date, period_in_months: int, income: Income, expense: Expenses, gross_savings: Savings, avg_monthly_savings: Savings, investments: Sequence[int], investments_sum: int):
         self.cutoff_date = cutoff_date
+        self.period_in_months = period_in_months
         self.income = income
         self.expense = expense
-        self.savings = savings
+        self.gross_savings = gross_savings
+        self.avg_monthly_savings = avg_monthly_savings
         self.investments = investments
         self.investments_sum = investments_sum
 

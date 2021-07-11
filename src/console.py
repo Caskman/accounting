@@ -11,9 +11,8 @@ def print_top(data_is: Sequence[int], f, n=5):
         print(f"\t{USD(t.amt)}\t{t.classification}\t{t.desc}")
 
 
-def console_print(finances: Finances):
+def console_print_months(finances: Finances):
     f = finances
-
     # Sort the month keys and print in month order
     sorted_month_keys = sorted(finances.monthly_finances.keys())
     for month_key in sorted_month_keys:
@@ -41,6 +40,12 @@ def console_print(finances: Finances):
                 f"\t{egc.group_keys[eg_i]}\t{USD(egc.group_sums[eg_i])}")
         print()
 
+
+def console_print(finances: Finances):
+    f = finances
+
+    # console_print_months(finances)
+
     # Print out 12-month report
     print()
     print("="*80)
@@ -53,16 +58,25 @@ def console_print(finances: Finances):
     print(
         f"Returns Income: {USD(finances.whole_finances.income.returnsincomesum)}")
     print(f"Expenses: {USD(finances.whole_finances.expense.expensessum)}")
-    print(f"Savings: {USD(finances.whole_finances.savings.amount_saved)}")
     print(
-        f"Saving Percentage: {percent(finances.whole_finances.savings.saving_ratio)}")
+        f"Gross Savings: {USD(finances.whole_finances.gross_savings.amount_saved)}")
+    print(
+        f"Gross Saving Percentage: {percent(finances.whole_finances.gross_savings.saving_ratio)}")
+    print(
+        f"Gross Avg Monthly Savings: {USD(finances.whole_finances.avg_monthly_savings.amount_saved)}")
+    print(
+        f"Gross Avg Monthly Savings Goals for {finances.whole_finances.period_in_months} months:")
+    savings = finances.whole_finances.avg_monthly_savings
+    for i in range(len(savings.savings_goals)):
+        print(
+            f"\tGoal: {percent(savings.savings_goals[i])}\tGoal Amount: {USD(savings.savings_goal_amts[i])}\tLeftover: {USD(savings.savings_goal_leftover[i])}")
     print(f"Investments: {USD(finances.whole_finances.investments_sum)}")
     # print_top(finances.whole_finances.investments, f)
     print(f"Biggest Expense Groups:")
     egc = finances.whole_finances.expense.expensegroupcoll
     for eg_i in egc.group_sums_sorted[:20]:
         print(
-            f"\t{egc.group_keys[eg_i]}\t{USD(egc.group_sums[eg_i])}")
+            f"\t{egc.group_keys[eg_i]}\t{percent(egc.group_percentages[eg_i])}\t{USD(egc.group_sums[eg_i])}")
     # print(f"Top Ignored Transactions:")
     # print_top(finances.ignored, f, 20)
 
