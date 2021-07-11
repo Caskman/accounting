@@ -44,7 +44,7 @@ def console_print_months(finances: Finances):
 def console_print(finances: Finances):
     f = finances
 
-    # console_print_months(finances)
+    console_print_months(finances)
 
     # Print out 12-month report
     print()
