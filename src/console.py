@@ -1,37 +1,39 @@
 from typing import Sequence
-
-
-def USD(val):
-    return "{:.2f}".format(float(val))
+from compile import Finances
+from util import percent, USD
 
 # prints the top five trans by absolute dollar amount
 
 
-def printTop5(data_is: Sequence[int], f):
-    for i in sorted(data_is, key=lambda i: abs(float(f.ix(i).amt)), reverse=True)[:5]:
+def print_top(data_is: Sequence[int], f, n=5):
+    for i in sorted(data_is, key=lambda i: abs(float(f.ix(i).amt)), reverse=True)[:n]:
         t = f.ix(i)
-        print(f"\t{float(t.amt)}\t{t.classification}\t{t.desc}")
+        print(f"\t{USD(t.amt)}\t{t.classification}\t{t.desc}")
 
 
-def console_print(finances):
-
+def console_print(finances: Finances):
     f = finances
 
     # Sort the month keys and print in month order
-    sorted_month_keys = sorted(finances.month_finances.keys())
+    sorted_month_keys = sorted(finances.monthly_finances.keys())
     for month_key in sorted_month_keys:
-        month_obj = finances.month_finances[month_key]
+        month_obj = finances.monthly_finances[month_key]
 
+        print("="*80)
         print(str(month_key))
         print(
             f"Income: {USD(month_obj.income.income_sum)}")
         print(
             f"\tWork income: {USD(month_obj.income.workincomesum)}")
-        printTop5(month_obj.income.nonworkincome, f)
+        print_top(month_obj.income.nonworkincome, f)
+        print(
+            f"\Returns income: {USD(month_obj.income.returnsincomesum)}")
         print(
             f"Expenses: {USD(month_obj.expense.expensessum)}")
+        print(f"Savings: {USD(month_obj.savings.amount_saved)}")
+        print(f"Saving Percentage: {percent(month_obj.savings.saving_ratio)}")
         print(f"Top expenses:")
-        printTop5(month_obj.expense.expenses, f)
+        print_top(month_obj.expense.expenses, f, 10)
         print(f"Top expense groups:")
         egc = month_obj.expense.expensegroupcoll
         for eg_i in egc.group_sums_sorted[:5]:
@@ -41,21 +43,56 @@ def console_print(finances):
 
     # Print out 12-month report
     print()
-    print(f"Since {finances.year_finances.cutoff_date}:")
-    print(f"Income: {USD(finances.year_finances.income.income_sum)}")
-    print(f"Expenses: {USD(finances.year_finances.expense.expensessum)}")
-    print(f"Investments: {USD(finances.year_finances.investments_sum)}")
+    print("="*80)
+    print(f"Since {finances.whole_finances.cutoff_date}:")
+    print(f"Income: {USD(finances.whole_finances.income.income_sum)}")
+    print(
+        f"Work Income: {USD(finances.whole_finances.income.workincomesum)}")
+    print(f"Biggest Non-Work Income:")
+    print_top(finances.whole_finances.income.nonworkincome, f)
+    print(
+        f"Returns Income: {USD(finances.whole_finances.income.returnsincomesum)}")
+    print(f"Expenses: {USD(finances.whole_finances.expense.expensessum)}")
+    print(f"Savings: {USD(finances.whole_finances.savings.amount_saved)}")
+    print(
+        f"Saving Percentage: {percent(finances.whole_finances.savings.saving_ratio)}")
+    print(f"Investments: {USD(finances.whole_finances.investments_sum)}")
+    # print_top(finances.whole_finances.investments, f)
     print(f"Biggest Expense Groups:")
-    egc = finances.year_finances.expense.expensegroupcoll
+    egc = finances.whole_finances.expense.expensegroupcoll
     for eg_i in egc.group_sums_sorted[:20]:
         print(
             f"\t{egc.group_keys[eg_i]}\t{USD(egc.group_sums[eg_i])}")
+    # print(f"Top Ignored Transactions:")
+    # print_top(finances.ignored, f, 20)
 
-    # Print out unclassified data if any
-    if len(finances.unclassified) > 0:
-        for i in finances.unclassified:
-            print(str(f.ix(i)))
+    # Print out classification errors
+    if finances.classification_errors.classification_error:
+        print(f"=====Classification Error=====")
+        class_warnings = finances.classification_errors
+        if len(class_warnings.unclassified_trans) > 0:
+            print("Unclassified Transactions")
+            for i in class_warnings.unclassified_trans:
+                print(str(f.ix(i)))
 
-        print(f"classified {len(finances.classified)}")
-        print(f"unclassified {len(finances.unclassified)}")
-        print(f"total data {len(finances.source)}")
+            print(f"classified {len(class_warnings.classified_trans)}")
+            print(f"unclassified {len(class_warnings.unclassified_trans)}")
+            print(f"total data {len(finances.source)}")
+            print()
+
+        if len(class_warnings.negative_returns) > 0:
+            print("Negative Returns Present")
+            for i in class_warnings.negative_returns:
+                print(str(f.ix(i)))
+
+        print(f"=====Classification Error=====")
+
+
+def console_print_test(finances: Finances):
+    data = finances.source
+
+    data_m_ignored = filter(
+        lambda t: not t.classification in ['Internal', 'Investments'], data)
+
+    balance = sum(map(lambda t: t.amt, data_m_ignored))
+    print(f"Balance: {balance}")

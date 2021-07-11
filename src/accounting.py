@@ -37,10 +37,17 @@ def run():
     data_all_time = datainput.parse_data_source(datasource)
 
     # compile data into a single object
-    finances = compile.compile_data(data_all_time, rules)
+    finances = compile.compile_data(
+        data_all_time, rules, compile.get_date_years_ago(1))
 
     # print data to console
+    # console.console_print_test(finances)
     console.console_print(finances)
+
+    # output data to excel file
+    run_id = c.get_run_id()
+    outputpath = os.path.join(LOCAL_DATA_DIR, f"aaa-output-{run_id}.xlsx")
+    spreadsheet.create_spreadsheet(finances, outputpath)
 
 
 if __name__ == "__main__":

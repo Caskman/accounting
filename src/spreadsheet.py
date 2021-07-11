@@ -1,8 +1,15 @@
+from typing import Sequence
 from openpyxl import Workbook
 from datetime import datetime
 from operator import attrgetter, itemgetter
 
+from openpyxl.worksheet.worksheet import Worksheet
+from compile import Finances
+
 from datafilter import filter_data
+from datainput import Transaction
+from util import USD
+
 
 def build_spreadsheet(c, data, outputpath):
     wb = Workbook()
@@ -38,6 +45,7 @@ def build_spreadsheet(c, data, outputpath):
     summaryws.append(["All Time Savings Rate", f"=100*B3/B1"])
 
     months_dict = {}
+
     def months_key(date_obj):
         return datetime.strptime(f"{date_obj.year}-{date_obj.month}", "%Y-%m").date()
     for d in data:
@@ -46,7 +54,7 @@ def build_spreadsheet(c, data, outputpath):
         if key in months_dict:
             month_obj = months_dict[key]
         else:
-            month_obj = Month(key, [],[])
+            month_obj = Month(key, [], [])
             months_dict[key] = month_obj
         if d.amt > 0:
             month_obj.income.append(d)
@@ -77,8 +85,9 @@ def build_spreadsheet(c, data, outputpath):
         ws.append(["Expenses"])
         ws.append(["Date", "Description", "Amount", "Income %"])
         for item in sorted(month.expense, key=attrgetter("amt")):
-            ws.append([item.date, item.desc, item.amt, f"=-100*C{ws.max_row + 1}/{income_sum_addr}"])
-    
+            ws.append([item.date, item.desc, item.amt,
+                      f"=-100*C{ws.max_row + 1}/{income_sum_addr}"])
+
     leftoverws = wb.create_sheet()
     leftoverws.title = "Leftover Data"
 
@@ -89,12 +98,78 @@ def build_spreadsheet(c, data, outputpath):
     wb.save(outputpath)
 
 
+def tab_append_data(finances: Finances, tab: Worksheet, data: Sequence[int]):
+    trans = map(lambda i: finances.ix(i), data)
+    tab_append_trans(tab, trans)
+
+
+def tab_append_trans(tab, data: Sequence[Transaction]):
+    tab.append(["Date", "Amount", "Class", "Description", "Source"])
+    for t in sorted(data, key=lambda t: abs(t.amt), reverse=True):
+        tab.append([t.date, USD(t.amt), t.classification, t.desc, t.source])
+
+
+def create_spreadsheet(finances: Finances, output_filepath: str):
+    wb = Workbook()
+    summaryws = wb.active
+
+    # Create year summary tab
+    year = finances.whole_finances
+    summaryws.title = "Year Summary"
+    summaryws.append(["Year Income", f"{year.income.income_sum}"])
+    summaryws.append(["Year Work Income", f"{year.income.workincomesum}"])
+    summaryws.append(
+        ["Year Non-Work Income", f"{year.income.nonworkincomesum}"])
+    summaryws.append(
+        ["Year Returns Income", f"{year.income.returnsincomesum}"])
+    summaryws.append(["Year Expenses", f"{year.expense.expensessum}"])
+    summaryws.append(["Year Investments", f"{year.investments_sum}"])
+
+    # Year Income tab
+    tab = wb.create_sheet()
+    tab.title = "Year Income"
+    tab_append_data(finances, tab, year.income.income)
+
+    # Year Work Income tab
+    tab = wb.create_sheet()
+    tab.title = "Year Work Income"
+    tab_append_data(finances, tab, year.income.workincome)
+
+    # Year Non-work Income tab
+    tab = wb.create_sheet()
+    tab.title = "Year Non-work Income"
+    tab_append_data(finances, tab, year.income.nonworkincome)
+
+    # Year Returns Income tab
+    tab = wb.create_sheet()
+    tab.title = "Year Returns Income"
+    tab_append_data(finances, tab, year.income.returnsincome)
+
+    # Year Expenses tab
+    tab = wb.create_sheet()
+    tab.title = "Year Expenses"
+    tab_append_data(finances, tab, year.expense.expenses)
+
+    # Year Investments tab
+    tab = wb.create_sheet()
+    tab.title = "Year Investments"
+    tab_append_data(finances, tab, year.investments)
+
+    # Ignored Transactions tab
+    tab = wb.create_sheet()
+    tab.title = "Ignored Transactions"
+    tab_append_data(finances, tab, finances.ignored)
+
+    # Source Data tab
+    tab = wb.create_sheet()
+    tab.title = "Source Data"
+    tab_append_trans(tab, finances.source)
+
+    wb.save(output_filepath)
+
+
 class Month():
     def __init__(self, date, income, expense):
         self.date = date
         self.income = income
         self.expense = expense
-
-if __name__ == "__main__":
-    main()
-
