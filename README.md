@@ -20,14 +20,6 @@ then you'll want to validate the data
 
 `python src/validate_local_data.py`
 
-## Deploy
-
-Run the `deploy` script
-
-## Update dependencies
-
-After setup, run `pip-compile --upgrade`
-
 ## Necessary Env Vars to go into local.env
 
 - AWS_ACCESS_KEY_ID=duh
