@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+import argparse
+import sys
+from accounting import run
+
+
+def run_all(sysargv: str):
+    parser = argparse.ArgumentParser(description='Run entire analysis')
+    args = parser.parse_args(sysargv)
+    run()
+
+
+parser = argparse.ArgumentParser(description='run finance analysis', usage='''
+
+    Commands available:
+        all         Run summary and month
+        test        Run test code
+        summary     Run summary only
+        month       Run month only
+''')
+
+commands = {
+    "all": run_all,
+}
+
+parser.add_argument("command", help="Subcommand to run")
+
+# parse_args defaults to [1:] for args, but you need to
+# exclude the rest of the args too, or validation will fail
+args = parser.parse_args(sys.argv[1:2])
+if not args.command in commands:
+    print('Unrecognized command')
+    parser.print_help()
+    exit(1)
+# use dispatch pattern to invoke method with same name
+commands[args.command](sys.argv[2:])
