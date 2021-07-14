@@ -22,7 +22,7 @@ def compile_data_into_spreadsheet():
     return outputpath
 
 
-def run():
+def run(summaryonly: bool, monthlyonly: bool, cutoffmonths: int, spreadsheetout: bool):
     c = s3datasource.get_context()
     LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
 
@@ -38,16 +38,22 @@ def run():
 
     # compile data into a single object
     finances = compile.compile_data(
-        data_all_time, rules, compile.get_date_years_ago(1))
+        data_all_time, rules, compile.get_date_months_ago(cutoffmonths))
 
     # print data to console
-    # console.console_print_test(finances)
-    console.console_print(finances)
+    if monthlyonly or not summaryonly:
+        console.console_print_monthly(finances)
+
+    if summaryonly or not monthlyonly:
+        console.console_print_summary(finances)
 
     # output data to excel file
-    run_id = c.get_run_id()
-    outputpath = os.path.join(LOCAL_DATA_DIR, f"aaa-output-{run_id}.xlsx")
-    spreadsheet.create_spreadsheet(finances, outputpath)
+    if spreadsheetout:
+        run_id = c.get_run_id()
+        outputpath = os.path.join(LOCAL_DATA_DIR, f"aaa-output-{run_id}.xlsx")
+        spreadsheet.create_spreadsheet(finances, outputpath)
+
+    console.print_classification_errors(finances)
 
 
 if __name__ == "__main__":

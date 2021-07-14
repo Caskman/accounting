@@ -1,3 +1,4 @@
+from dateutil.relativedelta import relativedelta
 from copy import copy
 import datetime
 from decimal import Decimal
@@ -88,6 +89,13 @@ def get_date_years_ago(years: int):
     year = now.year
     month = now.month
     return datetime.datetime(year-years, month, 1).date()
+
+
+def get_date_months_ago(months: int):
+    now = datetime.datetime.now()
+    thismonth = datetime.datetime(now.year, now.month, 1).date()
+    monthsago = thismonth - relativedelta(months=months)
+    return datetime.datetime(monthsago.year, monthsago.month, 1).date()
 
 
 def compile_data(data: Sequence[Transaction], rules, cutoff_date: datetime.date):

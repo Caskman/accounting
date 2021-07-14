@@ -11,7 +11,31 @@ def print_top(data_is: Sequence[int], f, n=5):
         print(f"\t{USD(t.amt)}\t{t.classification}\t{t.desc}")
 
 
-def console_print_months(finances: Finances):
+def print_classification_errors(finances: Finances):
+    f = finances
+    # Print out classification errors
+    if finances.classification_errors.classification_error:
+        print(f"=====Classification Error=====")
+        class_warnings = finances.classification_errors
+        if len(class_warnings.unclassified_trans) > 0:
+            print("Unclassified Transactions")
+            for i in class_warnings.unclassified_trans:
+                print(str(f.ix(i)))
+
+            print(f"classified {len(class_warnings.classified_trans)}")
+            print(f"unclassified {len(class_warnings.unclassified_trans)}")
+            print(f"total data {len(finances.source)}")
+            print()
+
+        if len(class_warnings.negative_returns) > 0:
+            print("Negative Returns Present")
+            for i in class_warnings.negative_returns:
+                print(str(f.ix(i)))
+
+        print(f"=====Classification Error=====")
+
+
+def console_print_monthly(finances: Finances):
     f = finances
     # Sort the month keys and print in month order
     sorted_month_keys = sorted(finances.monthly_finances.keys())
@@ -41,10 +65,8 @@ def console_print_months(finances: Finances):
         print()
 
 
-def console_print(finances: Finances):
+def console_print_summary(finances: Finances):
     f = finances
-
-    console_print_months(finances)
 
     # Print out 12-month report
     print()
@@ -79,27 +101,6 @@ def console_print(finances: Finances):
             f"\t{egc.group_keys[eg_i]}\t{percent(egc.group_percentages[eg_i])}\t{USD(egc.group_sums[eg_i])}")
     # print(f"Top Ignored Transactions:")
     # print_top(finances.ignored, f, 20)
-
-    # Print out classification errors
-    if finances.classification_errors.classification_error:
-        print(f"=====Classification Error=====")
-        class_warnings = finances.classification_errors
-        if len(class_warnings.unclassified_trans) > 0:
-            print("Unclassified Transactions")
-            for i in class_warnings.unclassified_trans:
-                print(str(f.ix(i)))
-
-            print(f"classified {len(class_warnings.classified_trans)}")
-            print(f"unclassified {len(class_warnings.unclassified_trans)}")
-            print(f"total data {len(finances.source)}")
-            print()
-
-        if len(class_warnings.negative_returns) > 0:
-            print("Negative Returns Present")
-            for i in class_warnings.negative_returns:
-                print(str(f.ix(i)))
-
-        print(f"=====Classification Error=====")
 
 
 def console_print_test(finances: Finances):
