@@ -8,21 +8,7 @@ import compile
 import console
 
 
-def compile_data_into_spreadsheet():
-    c = s3datasource.get_context()
-    LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
-
-    datasource = datainput.get_local_data_source(LOCAL_DATA_DIR)
-    data = datainput.parse_data_source(datasource)
-
-    run_id = c.get_run_id()
-    outputpath = os.path.join(LOCAL_DATA_DIR, f"aaa-output-{run_id}.xlsx")
-
-    spreadsheet.build_spreadsheet(c, data, outputpath)
-    return outputpath
-
-
-def run(summaryonly: bool, monthlyonly: bool, cutoffmonths: int, spreadsheetout: bool):
+def analyze(summaryonly: bool, monthlyonly: bool, cutoffmonths: int, spreadsheetout: bool):
     c = s3datasource.get_context()
     LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
 
@@ -54,7 +40,3 @@ def run(summaryonly: bool, monthlyonly: bool, cutoffmonths: int, spreadsheetout:
         spreadsheet.create_spreadsheet(finances, outputpath)
 
     console.print_classification_errors(finances)
-
-
-if __name__ == "__main__":
-    run()

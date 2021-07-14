@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import sys
-import math
-from accounting import run
+from analyze import analyze
 
 
 def run_analyze(sysargv: str):
@@ -21,8 +20,8 @@ def run_analyze(sysargv: str):
         print("--summary and --monthly cannot be present at the same time")
         exit(1)
 
-    run(summaryonly=args.summary, monthlyonly=args.monthly,
-        cutoffmonths=int(args.cutoff), spreadsheetout=args.spreadsheet)
+    analyze(summaryonly=args.summary, monthlyonly=args.monthly,
+            cutoffmonths=int(args.cutoff), spreadsheetout=args.spreadsheet)
 
 
 parser = argparse.ArgumentParser(description='run finance analysis', usage='''
