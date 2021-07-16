@@ -2,6 +2,7 @@
 import argparse
 import sys
 from analyze import analyze
+from custom import do_custom
 
 
 def run_analyze(sysargv: str):
@@ -24,15 +25,25 @@ def run_analyze(sysargv: str):
             cutoffmonths=int(args.cutoff), spreadsheetout=args.spreadsheet)
 
 
+def run_custom(sysargv: str):
+    parser = argparse.ArgumentParser(description='Run custom thing', usage='')
+    parser.add_argument("-c", "--cutoff", type=int, default=12,
+                        help="Specify how many months back to perform analysis")
+    args = parser.parse_args(sysargv)
+    do_custom(int(args.cutoff))
+
+
 parser = argparse.ArgumentParser(description='run finance analysis', usage='''
 
     Commands available:
         analyze     Run financial analysis
+        custom      Run custom stuff
         test        Run test code
 ''')
 
 commands = {
     "analyze": run_analyze,
+    "custom": run_custom,
 }
 
 parser.add_argument("command", help="Subcommand to run")

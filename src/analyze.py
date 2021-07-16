@@ -8,7 +8,7 @@ import compile
 import console
 
 
-def analyze(summaryonly: bool, monthlyonly: bool, cutoffmonths: int, spreadsheetout: bool):
+def standard_compilation(cutoffmonths: int):
     c = s3datasource.get_context()
     LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
 
@@ -25,6 +25,15 @@ def analyze(summaryonly: bool, monthlyonly: bool, cutoffmonths: int, spreadsheet
     # compile data into a single object
     finances = compile.compile_data(
         data_all_time, rules, compile.get_date_months_ago(cutoffmonths))
+
+    return finances
+
+
+def analyze(summaryonly: bool, monthlyonly: bool, cutoffmonths: int, spreadsheetout: bool):
+    c = s3datasource.get_context()
+    LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
+
+    finances = standard_compilation(cutoffmonths)
 
     # print data to console
     if monthlyonly or not summaryonly:
