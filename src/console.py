@@ -47,14 +47,15 @@ def console_print_monthly(finances: Finances):
         print(
             f"Income: {USD(month_obj.income.income_sum)}")
         print(
-            f"\tWork income: {USD(month_obj.income.workincomesum)}")
+            f"Work income: {USD(month_obj.income.workincomesum)}")
         print_top(month_obj.income.nonworkincome, f)
         print(
-            f"\Returns income: {USD(month_obj.income.returnsincomesum)}")
+            f"Returns income: {USD(month_obj.income.returnsincomesum)}")
         print(
             f"Expenses: {USD(month_obj.expense.expensessum)}")
-        print(f"Savings: {USD(month_obj.savings.amount_saved)}")
-        print(f"Saving Percentage: {percent(month_obj.savings.saving_ratio)}")
+        print(f"Gross Savings: {USD(month_obj.savings.amount_saved)}")
+        print(
+            f"Gross Saving Percentage: {percent(month_obj.savings.saving_ratio)}")
         print(f"Top expenses:")
         print_top(month_obj.expense.expenses, f, 10)
         print(f"Top expense groups:")

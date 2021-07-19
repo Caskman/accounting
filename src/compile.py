@@ -38,7 +38,7 @@ def group_sort_transactions(data_is: Sequence[int], ix: Callable[[int], Transact
     return [group_keys, group_sums, group_percentages, group_sorted]
 
 
-def analyze_financial_data(data_is, ix):
+def analyze_financial_data(data_is: Sequence[int], ix: Callable[[int], Transaction]):
     income = [i for i in data_is if ix(i).amt > 0]
     income_sum = sum(map(lambda i: ix(i).amt, income))
 
@@ -130,7 +130,9 @@ def compile_data(data: Sequence[Transaction], rules, cutoff_date: datetime.date)
     for month_key in months_dict.keys():
         income, expenses, savings = analyze_financial_data(
             months_dict[month_key], ix)
-        months_dict[month_key] = Month(month_key, income, expenses, savings)
+        source_data = months_dict[month_key]
+        months_dict[month_key] = Month(
+            month_key, income, expenses, savings, source_data)
 
     # Compile data on the whole period
     total_income, total_expenses, gross_savings = analyze_financial_data(
@@ -202,11 +204,12 @@ class Savings():
 
 
 class Month():
-    def __init__(self, date: datetime.date, income: Income, expense: Expenses, savings: Savings):
+    def __init__(self, date: datetime.date, income: Income, expense: Expenses, savings: Savings, source: Sequence[int]):
         self.date = date
         self.income = income
         self.expense = expense
         self.savings = savings
+        self.source = source
 
 
 class WholePeriod():
