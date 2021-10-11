@@ -12,6 +12,7 @@ def validate_local_data():
         print(results[1])
         print()
         print('Errors')
-        print(results[0])
+        for e in results[0]:
+            print(e)
         print()
         print(f'Total # of Errors: {num_errors}')
