@@ -38,7 +38,6 @@ parser = argparse.ArgumentParser(description='run finance analysis', usage='''
     Commands available:
         analyze     Run financial analysis
         custom      Run custom stuff
-        test        Run test code
 ''')
 
 commands = {

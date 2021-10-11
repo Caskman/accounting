@@ -3,7 +3,7 @@ import os
 import s3datasource
 import spreadsheet
 import datainput
-import classify
+from classify import custom as classify
 import compile
 import console
 

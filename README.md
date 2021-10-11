@@ -6,6 +6,13 @@
 4. Install dependencies `pip install -r requirements.txt`
 5. Establish your local.env file as stated below
 
+## Necessary Env Vars to go into local.env
+
+- AWS_ACCESS_KEY_ID=duh
+- AWS_SECRET_ACCESS_KEY=duh
+- BUCKET_ID=data source
+- CONFIG_PATH=path in s3 bucket containing additional config data
+
 ## Download Data
 
 First set your venv
@@ -20,9 +27,8 @@ then you'll want to validate the data
 
 `python src/validate_local_data.py`
 
-## Necessary Env Vars to go into local.env
+## Run the application
 
-- AWS_ACCESS_KEY_ID=duh
-- AWS_SECRET_ACCESS_KEY=duh
-- BUCKET_ID=data source
-- CONFIG_PATH=path in s3 bucket containing additional config data
+While in the venv run the following
+
+`src/run analyze`

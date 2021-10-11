@@ -1,8 +1,17 @@
-
-
+import yaml
 from typing import Sequence
 
 from datainput import Transaction
+
+
+def test():
+    text = """
+ClassificationRules:
+  Internal:
+    - 
+      matchers:
+      - 
+"""
 
 
 def classify(transactions, rules):
