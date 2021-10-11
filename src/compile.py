@@ -2,7 +2,7 @@ from dateutil.relativedelta import relativedelta
 from copy import copy
 import datetime
 from decimal import Decimal
-from classify import custom as classify
+from classify import classify
 from typing import Callable, Sequence, Dict
 from datainput import Transaction
 

@@ -3,7 +3,7 @@ import os
 import s3datasource
 import spreadsheet
 import datainput
-from classify import custom as classify
+from classify import yaml
 import compile
 import console
 
@@ -14,9 +14,9 @@ def standard_compilation(cutoffmonths: int):
 
     # Load classification rules
     rules_contents = None
-    with open('classification_rules.csv', 'r') as fin:
+    with open('classification_rules.yaml', 'r') as fin:
         rules_contents = fin.read()
-    rules = classify.process_rules(rules_contents)
+    rules = yaml.process_rules(rules_contents)
 
     # Load data
     datasource = datainput.get_local_data_source(LOCAL_DATA_DIR)

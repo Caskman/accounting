@@ -10,3 +10,4 @@ temp/*
 venv
 *sensitive*
 .aws-sam
+classification_rules*
