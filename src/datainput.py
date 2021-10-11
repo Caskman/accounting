@@ -110,6 +110,9 @@ def parse_file(filepath, filecontents) -> Sequence[Transaction]:
 
 
 def parse_chasecredit(lines, source) -> Sequence[Transaction]:
+    if 'Transaction Date,Post Date,Description,Category,Type,Amount' not in lines[0]:
+        raise Exception('Unrecognized file format for source: {source}')
+
     parsed_lines = list(csv.reader(lines))
     parsed_lines = parsed_lines[1:]
     return_data = []
@@ -164,6 +167,9 @@ def parse_llbeancredit(lines, source) -> Sequence[Transaction]:
 
 
 def parse_boacredit(lines, source) -> Sequence[Transaction]:
+    if 'Posted Date,Reference Number,Payee,Address,Amount' not in lines[0]:
+        raise Exception('Unrecognized file format for source: {source}')
+
     parsed_lines = list(csv.reader(lines))
     parsed_lines = parsed_lines[1:]
     return_data = []
