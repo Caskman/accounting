@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import datetime
+import os
 from os import error, listdir
 from os.path import join, abspath
 import csv
@@ -16,15 +17,16 @@ CHASE_CREDIT = "chasecredit"
 Format of filename is <source>_<type>_<date>.csv
 """
 
+
 def parse_file(filepath, filecontents):
     filename = filepath.split("/")[-1].replace(".csv", "")
     filenamesplits = filename.split("_")
     if len(filenamesplits) > 3:
         raise Exception(f"{filepath} has an invalid filename")
-    
+
     source, formattype, date = filenamesplits
     filelines = [l for l in filecontents.split('\n') if l.strip() != '']
-        
+
     resultdata = None
     if formattype == BOA_CREDIT:
         resultdata = parse_boacredit(filelines, source)
@@ -41,14 +43,16 @@ def parse_file(filepath, filecontents):
 
 # PARSE FUNCTIONS
 
+
 def parse_chasecredit(lines, source):
     parsed_lines = list(csv.reader(lines))
     parsed_lines = parsed_lines[1:]
     return_data = []
     for row in parsed_lines:
-        if not len(row) in [6,7]:
-            raise Exception(f"Invalid number of cols for source: {source} data type: {CHASE_CREDIT} cols: {len(row)}\nRow is:\n{row}")
-        
+        if not len(row) in [6, 7]:
+            raise Exception(
+                f"Invalid number of cols for source: {source} data type: {CHASE_CREDIT} cols: {len(row)}\nRow is:\n{row}")
+
         date = datetime.strptime(row[1], "%m/%d/%Y").date()
         amount = Decimal(re.sub(r"\"|\$", "", row[5]))
         description = f"{row[2]}; {row[3]}; {row[4]}"
@@ -68,13 +72,15 @@ def parse_chasecredit(lines, source):
 
     return return_data
 
+
 def parse_llbeancredit(lines, source):
     parsed_lines = list(csv.reader(lines, dialect='excel-tab'))
     return_data = []
     for row in parsed_lines:
         if len(row) < 4:
-            raise Exception(f"Invalid number of cols for source: {source} data type: {LLBEAN_MCCREDIT} cols: {len(row)}")
-        
+            raise Exception(
+                f"Invalid number of cols for source: {source} data type: {LLBEAN_MCCREDIT} cols: {len(row)}")
+
         date = datetime.strptime(row[0], "%m/%d/%Y").date()
         amount = Decimal(re.sub(r"\"|\$", "", row[1]))
         description = row[2]
@@ -91,13 +97,15 @@ def parse_llbeancredit(lines, source):
 
     return return_data
 
+
 def parse_boacredit(lines, source):
     parsed_lines = list(csv.reader(lines))
     parsed_lines = parsed_lines[1:]
     return_data = []
     for row in parsed_lines:
         if len(row) < 5:
-            raise Exception(f"Invalid number of cols for source: {source} data type: {BOA_CREDIT} cols: {len(row)}")
+            raise Exception(
+                f"Invalid number of cols for source: {source} data type: {BOA_CREDIT} cols: {len(row)}")
 
         date = datetime.strptime(row[0], "%m/%d/%Y").date()
         reference_number = row[1]
@@ -116,14 +124,16 @@ def parse_boacredit(lines, source):
 
     return return_data
 
+
 def parse_boadebit(lines, source):
     parsed_lines = list(csv.reader(lines))
     parsed_lines = parsed_lines[8:]
     return_data = []
     for row in parsed_lines:
         if len(row) < 3:
-            raise Exception(f"Invalid number of cols for source: {source} data type: {BOA_DEBIT} cols: {len(row)}")
-        
+            raise Exception(
+                f"Invalid number of cols for source: {source} data type: {BOA_DEBIT} cols: {len(row)}")
+
         date = datetime.strptime(row[0], "%m/%d/%Y").date()
         description = row[1]
         amount = Decimal(re.sub(r"\"", "", row[2]))
@@ -146,7 +156,8 @@ def parse_boadebit(lines, source):
 # DATA SOURCES
 
 def get_local_data_source(data_dir):
-    files = [abspath(join(data_dir, f)) for f in listdir(data_dir) if f[-4:] == ".csv"]
+    files = [abspath(join(data_dir, f))
+             for f in listdir(data_dir) if f[-4:] == ".csv"]
     for f in files:
         contents = ''
         with open(f, 'r') as fin:
@@ -156,15 +167,22 @@ def get_local_data_source(data_dir):
 
 # END DATA SOURCES
 
-def output_data_validation(datasource):
-    errors=[]
+def validate_data_availability(datapath):
+    return os.path.isdir(datapath)
+
+
+def validate_all_data(datasource):
+    errors = []
+    output = ''
     for filepath, contents in datasource:
         try:
             parse_file(filepath, contents)
         except Exception as e:
-            errors.append([filepath,contents,e])
-            print(f"Error: {filepath}\n\tException:\n\t{str(e)}")
-    print(f"Total errors: {len(errors)}")
+            errors.append([filepath, contents, e])
+            output += f"Error: {filepath}\n\tException:\n\t{str(e)}\n"
+    if len(errors) > 0:
+        output += f"Total errors: {len(errors)}\n"
+    return (errors, output)
 
 
 def parse_data_source(datasource):
@@ -175,7 +193,9 @@ def parse_data_source(datasource):
 
     return data
 
+
 TEMP_DIR = "temp"
+
 
 def parse_data_source_last_month(datasource):
     data = parse_data_source(datasource)
@@ -183,8 +203,9 @@ def parse_data_source_last_month(datasource):
     data_last_month = filter(lambda t: (today - t.date).days <= 30, data)
     return data_last_month
 
+
 class Transaction():
-    def __init__(self, identifier, date, desc, amt, source, ref_num=None, classification='none',memo=''):
+    def __init__(self, identifier, date, desc, amt, source, ref_num=None, classification='none', memo=''):
         self.id = identifier
         self.date = date
         self.desc = desc
@@ -193,7 +214,8 @@ class Transaction():
         self.ref_num = ref_num
         self.classification = classification
         self.classification_debug = ''
-        self.memo=memo
+        self.memo = memo
+
     @staticmethod
     def from_dict(d):
         return Transaction(
@@ -206,6 +228,7 @@ class Transaction():
             str(d['classification']),
             str(d['memo']),
         )
+
     def get_persistent_dict(self):
         return {
             'id': str(self.id),
@@ -217,10 +240,12 @@ class Transaction():
             'classification': str(self.classification),
             'memo': str(self.memo),
         }
+
     def get_json_dict(self):
         d = self.get_persistent_dict()
         d['amt'] = float(d['amt'])
         return d
+
     def field_order(self):
         return [
             self.id,
@@ -232,11 +257,11 @@ class Transaction():
             self.source,
             self.ref_num,
         ]
+
     def __repl__(self):
-        field_list = map(lambda t: str(t),self.field_order())
+        field_list = map(lambda t: str(t), self.field_order())
         field_string = ", ".join(field_list)
         return f"{{ {field_string} }}"
+
     def __str__(self):
         return self.__repl__()
-
-

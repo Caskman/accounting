@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import argparse
 import sys
-from analyze import analyze
+from analyze import AnalysisDataValidation, analyze, analyze_validation
 from custom import do_custom
+from download_data import retrieve_data
+from validate_local_data import validate_local_data
 
 
 def run_analyze(sysargv: str):
@@ -21,6 +23,16 @@ def run_analyze(sysargv: str):
         print("--summary and --monthly cannot be present at the same time")
         exit(1)
 
+    validation_results = analyze_validation()
+    if validation_results != AnalysisDataValidation.SUCCESS:
+        if validation_results == AnalysisDataValidation.MISSING_DATA:
+            print("Data is not available, use `src/run download` to download data")
+        elif validation_results == AnalysisDataValidation.DATA_ERRORS:
+            print("Data has errors, use `src/run validate` to see validation errors")
+        else:
+            print("Some unknown validation error occurred")
+        exit(1)
+
     analyze(summaryonly=args.summary, monthlyonly=args.monthly,
             cutoffmonths=int(args.cutoff), spreadsheetout=args.spreadsheet)
 
@@ -33,16 +45,28 @@ def run_custom(sysargv: str):
     do_custom(int(args.cutoff))
 
 
+def run_download(sysargv: str):
+    retrieve_data()
+
+
+def run_validate(sysargv: str):
+    validate_local_data()
+
+
 parser = argparse.ArgumentParser(description='run finance analysis', usage='''
 
     Commands available:
         analyze     Run financial analysis
         custom      Run custom stuff
+        download    Download data
+        validate    See data validation errors
 ''')
 
 commands = {
     "analyze": run_analyze,
     "custom": run_custom,
+    "download": run_download,
+    "validate": run_validate,
 }
 
 parser.add_argument("command", help="Subcommand to run")

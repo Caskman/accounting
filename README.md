@@ -10,10 +10,10 @@
 
 - AWS_ACCESS_KEY_ID=duh
 - AWS_SECRET_ACCESS_KEY=duh
-- BUCKET_ID=data source
+- BUCKET_ID=s3 bucket id
 - CONFIG_PATH=path in s3 bucket containing additional config data
 
-## Download Data
+## How to use
 
 First set your venv
 
@@ -21,14 +21,8 @@ First set your venv
 
 then download the data
 
-`python src/download_data.py`
+`src/run download`
 
-then you'll want to validate the data
-
-`python src/validate_local_data.py`
-
-## Run the application
-
-While in the venv run the following
+then run the application
 
 `src/run analyze`

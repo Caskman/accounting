@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 
 import s3datasource
@@ -49,3 +50,25 @@ def analyze(summaryonly: bool, monthlyonly: bool, cutoffmonths: int, spreadsheet
         spreadsheet.create_spreadsheet(finances, outputpath)
 
     console.print_classification_errors(finances)
+
+
+class AnalysisDataValidation(Enum):
+    SUCCESS = 0
+    MISSING_DATA = 1
+    DATA_ERRORS = 2
+
+
+def analyze_validation() -> AnalysisDataValidation:
+    c = s3datasource.get_context()
+    LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
+
+    if not datainput.validate_data_availability(LOCAL_DATA_DIR):
+        return AnalysisDataValidation.MISSING_DATA
+
+    datasource = datainput.get_local_data_source(LOCAL_DATA_DIR)
+    data_validation = datainput.validate_all_data(datasource)
+
+    if len(data_validation[0]) > 0:
+        return AnalysisDataValidation.DATA_ERRORS
+
+    return AnalysisDataValidation.SUCCESS
