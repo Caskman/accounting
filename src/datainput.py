@@ -1,4 +1,3 @@
-from decimal import Decimal
 from datetime import datetime
 import os
 from os import error, listdir
@@ -6,6 +5,7 @@ from os.path import join, abspath
 import csv
 import re
 from typing import Sequence
+from util import parse_decimal
 
 
 class Transaction():
@@ -26,7 +26,7 @@ class Transaction():
             str(d['id']),
             datetime.strptime(d['date'], "%Y-%m-%d").date(),
             str(d['desc']),
-            Decimal(d['amt']),
+            parse_decimal(d['amt']),
             str(d['source']),
             str(d['ref_num']),
             str(d['classification']),
@@ -38,7 +38,7 @@ class Transaction():
             'id': str(self.id),
             'date': str(self.date.isoformat()),
             'desc': str(self.desc),
-            'amt': Decimal(self.amt),
+            'amt': parse_decimal(self.amt),
             'source': str(self.source),
             'ref_num': str(self.ref_num),
             'classification': str(self.classification),
@@ -122,7 +122,7 @@ def parse_chasecredit(lines, source) -> Sequence[Transaction]:
                 f"Invalid number of cols for source: {source} data type: {CHASE_CREDIT} cols: {len(row)}\nRow is:\n{row}")
 
         date = datetime.strptime(row[1], "%m/%d/%Y").date()
-        amount = Decimal(re.sub(r"\"|\$", "", row[5]))
+        amount = parse_decimal(re.sub(r"\"|\$", "", row[5]))
         description = f"{row[2]}; {row[3]}; {row[4]}"
         memo = None
         if len(row) == 7:
@@ -150,7 +150,7 @@ def parse_llbeancredit(lines, source) -> Sequence[Transaction]:
                 f"Invalid number of cols for source: {source} data type: {LLBEAN_MCCREDIT} cols: {len(row)}")
 
         date = datetime.strptime(row[0], "%m/%d/%Y").date()
-        amount = Decimal(re.sub(r"\"|\$", "", row[1]))
+        amount = parse_decimal(re.sub(r"\"|\$", "", row[1]))
         description = row[2]
 
         new_item = Transaction(
@@ -181,7 +181,7 @@ def parse_boacredit(lines, source) -> Sequence[Transaction]:
         date = datetime.strptime(row[0], "%m/%d/%Y").date()
         reference_number = row[1]
         description = row[2]
-        amount = Decimal(re.sub(r"\"", "", row[4]))
+        amount = parse_decimal(re.sub(r"\"", "", row[4]))
 
         new_item = Transaction(
             None,
@@ -216,7 +216,7 @@ def parse_boadebit(lines, source) -> Sequence[Transaction]:
 
         date = datetime.strptime(row[0], "%m/%d/%Y").date()
         description = row[1]
-        amount = Decimal(re.sub(r"\"", "", row[2]))
+        amount = parse_decimal(re.sub(r"\"", "", row[2]))
 
         new_item = Transaction(
             None,

@@ -7,7 +7,7 @@ from typing import Callable, Sequence, Dict
 from datainput import Transaction
 
 
-ignored_class = ['Internal', 'Investments']
+ignored_class = ['Internal', 'Investments', 'RareNLarge']
 work_income_class = ['Income']
 investment_class = ['Investments']
 returns_class = ['Returns']

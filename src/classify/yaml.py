@@ -1,6 +1,8 @@
 from re import sub
 import yaml
 from typing import Sequence, Union, Dict, Any
+import datetime
+from util import parse_decimal
 
 from datainput import Transaction
 
@@ -141,14 +143,33 @@ def abs_amt_validator(statement: RuleStatement):
     if 'amt' not in statement.params:
         raise Exception(
             'Rule validation failed: abs-amt statement has no amt param')
-    if not isinstance(statement.params['amt'], int):
-        raise Exception('Rule validation failed: amt param is not of type int')
+    amt_param = statement.params['amt']
+    try:
+        parse_decimal(str(amt_param))
+    except Exception as e:
+        raise Exception(
+            f'Rule validation failed: amt param <{amt_param}> is not a Decimal') from e
+    return True
+
+
+def date_validator(statement: RuleStatement):
+    if 'date' not in statement.params:
+        raise Exception(
+            'Rule validation failed: date statement has no date param')
+    date_param = statement.params['date']
+    if not isinstance(date_param, datetime.date):
+        try:
+            datetime.datetime.strptime(str(date_param), '%Y-%m-%d').date()
+        except ValueError as e:
+            error_message = f'Rule validation failed: date statement date param <{date_param}> is not of format YYYY-MM-DD'
+            raise Exception(error_message) from e
     return True
 
 
 statement_validators = {
     'substring': substring_validator,
     'abs-amt': abs_amt_validator,
+    'date': date_validator,
 }
 
 # Statement Executors
@@ -174,9 +195,21 @@ def _rule_abs_amt_format(val):
     return "{:.2f}".format(abs(float(val)))
 
 
+def date_executor(params):
+    if isinstance(params['date'], datetime.date):
+        date = params['date']
+    else:
+        date = datetime.datetime.strptime(params['date'], '%Y-%m-%d')
+
+    def resolve(transaction: Transaction):
+        return transaction.date.strftime('%Y-%m-%d') == date.strftime('%Y-%m-%d')
+    return resolve
+
+
 statement_executors = {
     'substring': substring_executor,
     'abs-amt': abs_amt_executor,
+    'date': date_executor,
 }
 
 ## Assembling & Validation
@@ -233,7 +266,7 @@ def validate_rule(rule: Union[Rule, RuleGroup]):
 
             if statement.type not in statement_validators:
                 raise Exception(
-                    'Rule validation failed: statement type not recognized')
+                    f'Rule validation failed: statement type not recognized <{statement.type}>')
             statement_validators[statement.type](statement)
         return True
 
