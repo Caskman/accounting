@@ -5,6 +5,7 @@ from analyze import AnalysisDataValidation, analyze, analyze_validation
 from custom import do_custom
 from download_data import retrieve_data
 from validate_local_data import validate_local_data
+from classify.classifyhelp import show_classification_help
 
 
 def run_analyze(sysargv: str):
@@ -53,6 +54,16 @@ def run_validate(sysargv: str):
     validate_local_data()
 
 
+def run_classify(sysargv: str):
+    parser = argparse.ArgumentParser(
+        description='Helps fix classification errors by listing the errors and showing all categories of classification')
+    parser.add_argument("-c", "--categories", action="store_true",
+                        help="Only print classification categories")
+
+    args = parser.parse_args(sysargv)
+    show_classification_help(args.categories)
+
+
 parser = argparse.ArgumentParser(description='run finance analysis', usage='''
 
     Commands available:
@@ -60,6 +71,7 @@ parser = argparse.ArgumentParser(description='run finance analysis', usage='''
         custom      Run custom stuff
         download    Download data
         validate    See data validation errors
+        classify    Manage classification errors
 ''')
 
 commands = {
@@ -67,6 +79,7 @@ commands = {
     "custom": run_custom,
     "download": run_download,
     "validate": run_validate,
+    "classify": run_classify,
 }
 
 parser.add_argument("command", help="Subcommand to run")

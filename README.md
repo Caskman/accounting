@@ -93,3 +93,16 @@ rules:
 ## How to mark transactions as ignored?
 
 Specially handled classifications are listed in [this file](src/compile.py)
+
+## How to leave comments or notes?
+
+You can add random properties anywhere, they won't break anything. The standard is to leave a description at the top level like so
+
+```yaml
+- name: SomeCategory
+  description: Note on what this is for future you
+  statements:
+    - type: substring
+      params:
+        string: I'm some weird horribly not descriptive string I need to match
+```

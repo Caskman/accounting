@@ -272,3 +272,12 @@ def validate_rule(rule: Union[Rule, RuleGroup]):
 
     else:
         raise Exception('Rule validation failed: rule is not of type Rule')
+
+## Retrieve Rules String
+
+def get_rules_string():
+    rules_contents = None
+    with open('classification_rules.yaml', 'r') as fin:
+        rules_contents = fin.read()
+    return rules_contents
+

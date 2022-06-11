@@ -14,9 +14,7 @@ def standard_compilation(cutoffmonths: int):
     LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
 
     # Load classification rules
-    rules_contents = None
-    with open('classification_rules.yaml', 'r') as fin:
-        rules_contents = fin.read()
+    rules_contents = yaml.get_rules_string()
     rules = yaml.process_rules(rules_contents)
 
     # Load data
