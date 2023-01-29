@@ -1,10 +1,13 @@
 ## Setup
 
-1. Install pip
-2. Install virtualenv `pip install virtualenv`
-3. Create virtual env `virtualenv venv`
-4. Install dependencies `pip install -r requirements.txt`
-5. Establish your local.env file as stated below
+Instructions specific to MacOS
+
+1. Install conda `brew upgrade && brew update && brew install conda`
+2. Install pip `conda install pip`
+3. Install virvualenv `pip install virtualenv`
+4. Switch to venv `source venv/bin/activate`
+5. Install dependencies `pip install -r requirements.txt`
+6. Establish your local.env file as stated below
 
 ## Necessary Env Vars to go into local.env
 
