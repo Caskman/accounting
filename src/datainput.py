@@ -87,7 +87,7 @@ Format of filename is <source>_<type>_<date>.csv
 def parse_file(filepath, filecontents) -> Sequence[Transaction]:
     filename = filepath.split("/")[-1].replace(".csv", "")
     filenamesplits = filename.split("_")
-    if len(filenamesplits) > 3:
+    if len(filenamesplits) != 3:
         raise Exception(f"{filepath} has an invalid filename")
 
     source, formattype, date = filenamesplits

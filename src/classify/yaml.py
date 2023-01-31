@@ -3,6 +3,7 @@ import yaml
 from typing import Sequence, Union, Dict, Any
 import datetime
 from util import parse_decimal
+import paths
 
 from datainput import Transaction
 
@@ -273,11 +274,10 @@ def validate_rule(rule: Union[Rule, RuleGroup]):
     else:
         raise Exception('Rule validation failed: rule is not of type Rule')
 
-## Retrieve Rules String
 
-def get_rules_string():
+def get_rules_string(context):
     rules_contents = None
-    with open('classification_rules.yaml', 'r') as fin:
+    rules_file_path = paths.get_classification_rules_file_path(context)
+    with open(rules_file_path, 'r') as fin:
         rules_contents = fin.read()
     return rules_contents
-

@@ -11,3 +11,4 @@ venv
 *sensitive*
 .aws-sam
 classification_rules*
+local_data

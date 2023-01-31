@@ -7,6 +7,7 @@ import datainput
 from classify import yaml
 import compile
 import console
+import paths
 
 
 def standard_compilation(cutoffmonths: int):
@@ -14,7 +15,7 @@ def standard_compilation(cutoffmonths: int):
     data_all_time = datainput.get_parsed_local_data(context)
 
     # Load classification rules
-    rules_contents = yaml.get_rules_string()
+    rules_contents = yaml.get_rules_string(context)
     rules = yaml.process_rules(rules_contents)
 
     # compile data into a single object
@@ -54,12 +55,12 @@ class AnalysisDataValidation(Enum):
 
 def analyze_validation() -> AnalysisDataValidation:
     c = s3datasource.get_context()
-    LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
+    statement_data_path = paths.get_statement_data_path(c)
 
-    if not datainput.validate_data_availability(LOCAL_DATA_DIR):
+    if not datainput.validate_data_availability(statement_data_path):
         return AnalysisDataValidation.MISSING_DATA
 
-    datasource = datainput.get_local_data_source(LOCAL_DATA_DIR)
+    datasource = datainput.get_local_data_source(statement_data_path)
     data_validation = datainput.validate_all_data(datasource)
 
     if len(data_validation[0]) > 0:
