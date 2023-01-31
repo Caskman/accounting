@@ -10,16 +10,12 @@ import console
 
 
 def standard_compilation(cutoffmonths: int):
-    c = s3datasource.get_context()
-    LOCAL_DATA_DIR = c.get_var("LOCAL_DATA_DIR")
+    context = s3datasource.get_context()
+    data_all_time = datainput.get_parsed_local_data(context)
 
     # Load classification rules
     rules_contents = yaml.get_rules_string()
     rules = yaml.process_rules(rules_contents)
-
-    # Load data
-    datasource = datainput.get_local_data_source(LOCAL_DATA_DIR)
-    data_all_time = datainput.parse_data_source(datasource)
 
     # compile data into a single object
     finances = compile.compile_data(

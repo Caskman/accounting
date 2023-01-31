@@ -6,6 +6,7 @@ import csv
 import re
 from typing import Sequence
 from util import parse_decimal
+import paths
 
 
 class Transaction():
@@ -274,11 +275,15 @@ def parse_data_source(datasource) -> Sequence[Transaction]:
     return data
 
 
-TEMP_DIR = "temp"
-
-
 def parse_data_source_last_month(datasource):
     data = parse_data_source(datasource)
     today = datetime.now().date()
     data_last_month = filter(lambda t: (today - t.date).days <= 30, data)
     return data_last_month
+
+
+def get_parsed_local_data(context):
+    statement_data_path = paths.get_statement_data_path(context)
+    datasource = get_local_data_source(statement_data_path)
+    data_all_time = parse_data_source(datasource)
+    return data_all_time

@@ -30,6 +30,8 @@ then run the application
 
 `src/run analyze`
 
+to save
+
 ## How to update the classification rules
 
 Classification rules is composed of a list of objects under the property `rules`
