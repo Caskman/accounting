@@ -76,6 +76,7 @@ rules:
 
 - substring: will match true if the given string matches any substring of the transaction description
 - abs-amt: will match true if the given amt parameter matches the absolute value of the transaction amount
+- date: will match true if the given date parameter matches the transaction date. Date format is YYYY-MM-DD
 
 ```yaml
 rules:
