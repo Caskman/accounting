@@ -6,6 +6,7 @@ from custom import do_custom
 from download_data import retrieve_data
 from validate_local_data import validate_local_data
 from classify.classifyhelp import show_classification_help
+from save import save_classification_rules
 
 
 def run_analyze(sysargv: str):
@@ -64,6 +65,10 @@ def run_classify(sysargv: str):
     show_classification_help(args.categories)
 
 
+def run_save(sysargv: str):
+    save_classification_rules()
+
+
 parser = argparse.ArgumentParser(description='run finance analysis', usage='''
 
     Commands available:
@@ -72,6 +77,7 @@ parser = argparse.ArgumentParser(description='run finance analysis', usage='''
         download    Download data
         validate    See data validation errors
         classify    Manage classification errors
+        save        Saves classification rules
 ''')
 
 commands = {
@@ -80,6 +86,7 @@ commands = {
     "download": run_download,
     "validate": run_validate,
     "classify": run_classify,
+    "save": run_save,
 }
 
 parser.add_argument("command", help="Subcommand to run")

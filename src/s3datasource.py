@@ -94,3 +94,10 @@ def store_transaction_data(c, string_data):
 def get_auth_token(c):
     auth_token_key = c.get_var('AUTH_TOKEN')
     return auth_token_key
+
+
+def save_object_from_file_path(context, file_path, object_key):
+    s3 = aws.gets3resource(context)
+    bucket_id = context.get_var("BUCKET_ID")
+    with open(file_path, 'rb') as file_handle:
+        s3.Object(bucket_id, object_key).put(Body=file_handle)

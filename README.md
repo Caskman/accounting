@@ -30,7 +30,9 @@ then run the application
 
 `src/run analyze`
 
-to save
+to save classification rules
+
+`src/run save`
 
 ## How to update the classification rules
 
